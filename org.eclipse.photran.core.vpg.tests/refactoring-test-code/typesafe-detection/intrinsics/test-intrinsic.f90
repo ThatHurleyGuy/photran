@@ -1,0 +1,6 @@
+PROGRAM intrinsic
+IMPLICIT NONE
+
+CALL RANDOM_SEED
+
+END PROGRAM intrinsic

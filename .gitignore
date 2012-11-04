@@ -1,1 +1,3 @@
 /.project
+*.exe
+.DS_Store

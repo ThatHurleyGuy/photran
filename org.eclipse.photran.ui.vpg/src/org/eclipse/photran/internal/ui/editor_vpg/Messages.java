@@ -24,6 +24,10 @@ public class Messages extends NLS
     public static String FortranEditorTasks_UpdatingFortranEditorWithNewAnalysisInfo;
 
     public static String FortranEditorTasks_UpdatingFortranEditorWithNewParseInfo;
+
+    public static String FortranEditorTasks_Lint_CallToExternalSubroutineUnsafe;
+    
+    public static String FortranEditorTasks_Lint_QuickFixUnsafeCall;
     static
     {
         // initialize resource bundle

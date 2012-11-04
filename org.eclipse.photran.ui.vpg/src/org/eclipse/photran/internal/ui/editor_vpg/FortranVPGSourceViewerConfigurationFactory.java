@@ -13,14 +13,17 @@ package org.eclipse.photran.internal.ui.editor_vpg;
 import org.eclipse.cdt.internal.ui.text.CCompositeReconcilingStrategy;
 import org.eclipse.jface.text.ITextHover;
 import org.eclipse.jface.text.contentassist.IContentAssistant;
+import org.eclipse.jface.text.source.IAnnotationHover;
 import org.eclipse.jface.text.source.ISourceViewer;
 import org.eclipse.jface.text.source.SourceViewerConfiguration;
 import org.eclipse.photran.internal.ui.editor.FortranEditor;
-import org.eclipse.photran.internal.ui.editor.IFortranSourceViewerConfigurationFactory;
 import org.eclipse.photran.internal.ui.editor.FortranEditor.FortranSourceViewerConfiguration;
+import org.eclipse.photran.internal.ui.editor.IFortranSourceViewerConfigurationFactory;
 import org.eclipse.photran.internal.ui.editor_vpg.contentassist.FortranCompletionProcessor;
 import org.eclipse.photran.internal.ui.editor_vpg.folding.FortranFoldingProvider;
+import org.eclipse.photran.internal.ui.editor_vpg.hover.AnnotationHover;
 import org.eclipse.photran.internal.ui.editor_vpg.hover.FortranDeclarationHover;
+import org.eclipse.photran.internal.ui.editor_vpg.lint.TypesafeCallChecker;
 
 /**
  * Factory providing a <code>SourceViewerConfiguration</code> for the Fortran editors which supports
@@ -29,30 +32,43 @@ import org.eclipse.photran.internal.ui.editor_vpg.hover.FortranDeclarationHover;
  * @author Jeff Overbey
  */
 @SuppressWarnings("restriction")
-public class FortranVPGSourceViewerConfigurationFactory implements IFortranSourceViewerConfigurationFactory
+public class FortranVPGSourceViewerConfigurationFactory implements
+    IFortranSourceViewerConfigurationFactory
 {
     public SourceViewerConfiguration create(final FortranEditor editor)
     {
         new FortranFoldingProvider().setup(editor);
-        
+        new TypesafeCallChecker().setup(editor);
+
         return new FortranSourceViewerConfiguration(editor)
         {
             private final FortranCompletionProcessor fortranCompletionProcessor = new FortranCompletionProcessor();
-            
-            @Override protected CCompositeReconcilingStrategy createReconcilingStrategy(ISourceViewer sourceViewer)
+
+            @Override
+            protected CCompositeReconcilingStrategy createReconcilingStrategy(
+                ISourceViewer sourceViewer)
             {
-                return new FortranVPGReconcilingStrategy(sourceViewer, editor, getConfiguredDocumentPartitioning(sourceViewer));
+                return new FortranVPGReconcilingStrategy(sourceViewer, editor,
+                    getConfiguredDocumentPartitioning(sourceViewer));
             }
 
-            @Override public IContentAssistant getContentAssistant(ISourceViewer sourceViewer)
+            @Override
+            public IContentAssistant getContentAssistant(ISourceViewer sourceViewer)
             {
                 IContentAssistant result = fortranCompletionProcessor.setup((FortranEditor)editor);
                 return result == null ? super.getContentAssistant(sourceViewer) : result;
             }
 
-            @Override public ITextHover getTextHover(ISourceViewer sourceViewer, String contentType)
+            @Override
+            public ITextHover getTextHover(ISourceViewer sourceViewer, String contentType)
             {
                 return new FortranDeclarationHover(sourceViewer, (FortranEditor)editor);
+            }
+
+            @Override
+            public IAnnotationHover getAnnotationHover(ISourceViewer sourceViewer)
+            {
+                return new AnnotationHover();
             }
         };
     }

@@ -25,8 +25,9 @@ import org.eclipse.ui.texteditor.ITextEditor;
 public class FortranVPGReconcilingStrategy extends CCompositeReconcilingStrategy
 {
     protected final FortranEditor editor;
-    
-    public FortranVPGReconcilingStrategy(ISourceViewer sourceViewer, ITextEditor editor, String documentPartitioning)
+
+    public FortranVPGReconcilingStrategy(ISourceViewer sourceViewer, ITextEditor editor,
+        String documentPartitioning)
     {
         super(sourceViewer, editor, documentPartitioning);
         if (editor instanceof FortranEditor)
@@ -39,13 +40,15 @@ public class FortranVPGReconcilingStrategy extends CCompositeReconcilingStrategy
         }
     }
 
-    @Override public void initialReconcile()
+    @Override
+    public void initialReconcile()
     {
         super.initialReconcile();
         FortranEditorTasks.instance(editor).getRunner().runTasks();
     }
 
-    @Override public void reconcile(IRegion region)
+    @Override
+    public void reconcile(IRegion region)
     {
         super.reconcile(region);
         FortranEditorTasks.instance(editor).getRunner().runTasks();

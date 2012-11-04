@@ -363,6 +363,7 @@ public abstract class FortranResourceRefactoring
     protected static IASTNode findEnclosingNode(IFortranAST ast, ITextSelection selection)
     {
         Token firstToken = findFirstTokenAfter(ast, selection.getOffset());
+        System.out.println("Find encl: " + firstToken.getText());
         Token lastToken = findLastTokenBefore(ast, OffsetLength.getPositionPastEnd(selection.getOffset(), selection.getLength()));
         if (firstToken == null || lastToken == null) return null;
 
