@@ -14,8 +14,13 @@ import java.util.ArrayList;
 import java.util.HashMap;
 
 import org.eclipse.core.resources.IFile;
+import org.eclipse.core.resources.IMarker;
+import org.eclipse.core.resources.IResource;
+import org.eclipse.core.resources.IWorkspaceRunnable;
+import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IConfigurationElement;
+import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.Platform;
 import org.eclipse.core.runtime.Preferences.IPropertyChangeListener;
 import org.eclipse.help.IContext;
@@ -29,6 +34,7 @@ import org.eclipse.jface.text.DefaultLineTracker;
 import org.eclipse.jface.text.DocumentEvent;
 import org.eclipse.jface.text.IDocument;
 import org.eclipse.jface.text.IDocumentExtension3;
+import org.eclipse.jface.text.IDocumentListener;
 import org.eclipse.jface.text.IDocumentPartitioner;
 import org.eclipse.jface.text.IRegion;
 import org.eclipse.jface.text.ITextSelection;
@@ -90,24 +96,31 @@ import org.eclipse.ui.texteditor.WorkbenchChainedTextFontFieldEditor;
 
 /**
  * Fortran editor
- *
+ * 
  * @author Jeff Overbey
  * @author Kurt Hendle - folding support
  */
 @SuppressWarnings("deprecation")
-public class FortranEditor extends CDTBasedTextEditor implements ISelectionChangedListener, IPropertyChangeListener
+public class FortranEditor extends CDTBasedTextEditor implements ISelectionChangedListener,
+    IPropertyChangeListener
 {
-    ///////////////////////////////////////////////////////////////////////////////////////////////
+    // /////////////////////////////////////////////////////////////////////////////////////////////
     // Constants
-    ///////////////////////////////////////////////////////////////////////////////////////////////
+    // /////////////////////////////////////////////////////////////////////////////////////////////
 
-    /** Editor ID for the Fortran editor.  Defined in org.eclipse.photran.ui/plugin.xml */
+    /** Editor ID for the Fortran editor. Defined in org.eclipse.photran.ui/plugin.xml */
     public static final String EDITOR_ID = "org.eclipse.photran.ui.FortranEditor"; //$NON-NLS-1$
 
-    /** Context-sensitive help ID for the Fortran editor.  Defined in org.eclipse.photran.doc.user/contexts.xml */
+    /**
+     * Context-sensitive help ID for the Fortran editor. Defined in
+     * org.eclipse.photran.doc.user/contexts.xml
+     */
     public static final String HELP_CONTEXT_ID = "org.eclipse.photran.ui.editor"; //$NON-NLS-1$
 
-    /** Extension point ID for contributing new source viewer configurations.  Defined in Defined in org.eclipse.photran.ui/plugin.xml */
+    /**
+     * Extension point ID for contributing new source viewer configurations. Defined in Defined in
+     * org.eclipse.photran.ui/plugin.xml
+     */
     public static final String SOURCE_VIEWER_CONFIG_EXTENSION_POINT_ID = "org.eclipse.photran.ui.sourceViewerConfig"; //$NON-NLS-1$
 
     protected static String CONTEXT_MENU_ID = "#FortranEditorContextMenu"; //$NON-NLS-1$
@@ -118,27 +131,30 @@ public class FortranEditor extends CDTBasedTextEditor implements ISelectionChang
 
     protected static final RGB VERTICAL_LINE_COLOR = new RGB(176, 180, 185);
 
-    ///////////////////////////////////////////////////////////////////////////////////////////////
+    // /////////////////////////////////////////////////////////////////////////////////////////////
     // Public Fields - Custom Reconciler Task Support
-    ///////////////////////////////////////////////////////////////////////////////////////////////
+    // /////////////////////////////////////////////////////////////////////////////////////////////
 
     /** @see org.eclipse.photran.internal.ui.editor_vpg.FortranVPGReconcilingStrategy */
     public Object reconcilerTasks = null;
 
-    ///////////////////////////////////////////////////////////////////////////////////////////////
+    // /////////////////////////////////////////////////////////////////////////////////////////////
     // Fields
-    ///////////////////////////////////////////////////////////////////////////////////////////////
+    // /////////////////////////////////////////////////////////////////////////////////////////////
 
     protected IPreferenceStore fCombinedPreferenceStore;
+
     protected Composite fMainComposite;
+
     protected Color verticalLineColor;
+
     protected TabsToSpacesConverter tabToSpacesConverter;
 
     // More fields in Folding, below
 
-    ///////////////////////////////////////////////////////////////////////////////////////////////
+    // /////////////////////////////////////////////////////////////////////////////////////////////
     // Constructor
-    ///////////////////////////////////////////////////////////////////////////////////////////////
+    // /////////////////////////////////////////////////////////////////////////////////////////////
 
     public FortranEditor()
     {
@@ -151,7 +167,8 @@ public class FortranEditor extends CDTBasedTextEditor implements ISelectionChang
         // Without this, the editor will not auto-update
         IPreferenceStore store = FortranUIPlugin.getDefault().getPreferenceStore();
         IPreferenceStore generalTextStore = EditorsUI.getPreferenceStore();
-        fCombinedPreferenceStore = new ChainedPreferenceStore(new IPreferenceStore[] { store, generalTextStore, getPreferenceStore()});
+        fCombinedPreferenceStore = new ChainedPreferenceStore(
+            new IPreferenceStore[] { store, generalTextStore, getPreferenceStore() });
         setPreferenceStore(fCombinedPreferenceStore);
         // This enables any global changes to editor e.g. font type and size to take effect
         WorkbenchChainedTextFontFieldEditor.startPropagate(store, JFaceResources.TEXT_FONT);
@@ -162,11 +179,12 @@ public class FortranEditor extends CDTBasedTextEditor implements ISelectionChang
         FortranCorePlugin.getDefault().getPluginPreferences().addPropertyChangeListener(this);
     }
 
-    ///////////////////////////////////////////////////////////////////////////////////////////////
+    // /////////////////////////////////////////////////////////////////////////////////////////////
     // JFace Text Overrides
-    ///////////////////////////////////////////////////////////////////////////////////////////////
+    // /////////////////////////////////////////////////////////////////////////////////////////////
 
-    @Override protected void doSetInput(IEditorInput input) throws CoreException
+    @Override
+    protected void doSetInput(IEditorInput input) throws CoreException
     {
         super.doSetInput(input);
 
@@ -174,76 +192,144 @@ public class FortranEditor extends CDTBasedTextEditor implements ISelectionChang
         if (document == null) return;
 
         configurePartitionScanner(document);
+        configureMarkerScanner(document);
 
-//        if (input instanceof FileEditorInput)
-//            checkForContentTypeMismatch((FileEditorInput)input);
+        // if (input instanceof FileEditorInput)
+        // checkForContentTypeMismatch((FileEditorInput)input);
     }
 
-    @Override public void createPartControl(Composite parent)
+    @Override
+    public void createPartControl(Composite parent)
     {
         super.createPartControl(parent);
 
-        if (FortranPreferences.ENABLE_FOLDING.getValue())
-            installProjectionSupport();
+        if (FortranPreferences.ENABLE_FOLDING.getValue()) installProjectionSupport();
 
         createLightGrayLines();
 
-//        addWatermark(parent);
-        
+        // addWatermark(parent);
+
         addHelpListener(parent);
     }
 
-    ///////////////////////////////////////////////////////////////////////////////////////////////
+    // /////////////////////////////////////////////////////////////////////////////////////////////
+    // Marker Scanners
+    // /////////////////////////////////////////////////////////////////////////////////////////////
+    protected void configureMarkerScanner(IDocument document)
+    {
+        document.addDocumentListener(new IDocumentListener()
+        {
+
+            @Override
+            public void documentAboutToBeChanged(DocumentEvent event)
+            {
+                return;
+            }
+
+            @Override
+            public void documentChanged(DocumentEvent event)
+            {
+
+                IWorkspaceRunnable runnable = new IWorkspaceRunnable()
+                {
+
+                    @Override
+                    public void run(IProgressMonitor monitor) throws CoreException
+                    {
+                        try
+                        {
+                            IResource res = FortranEditor.this.getIFile();
+                            res.deleteMarkers(IMarker.PROBLEM, true, IResource.DEPTH_INFINITE);
+                            IMarker marker = res.createMarker(IMarker.PROBLEM);
+                            marker.setAttribute(IMarker.SEVERITY, IMarker.SEVERITY_WARNING);
+                            marker.setAttribute(IMarker.MESSAGE, "This is a test message"); //$NON-NLS-1$
+                            // +1 because line numbers start at 0, but markers start at 1
+                            marker.setAttribute(IMarker.LINE_NUMBER, FortranEditor.this
+                                .getSelection().getStartLine() + 1);
+                        }
+                        catch (CoreException ex)
+                        {
+                            ;
+                        }
+
+                    }
+
+                };
+                
+                try
+                {
+                    ResourcesPlugin.getWorkspace().run(runnable, getProgressMonitor());
+                }
+                catch (CoreException e)
+                {
+                    ;
+                }                
+
+            }
+
+        });
+    }
+
+    // /////////////////////////////////////////////////////////////////////////////////////////////
     // Tabs to Spaces Conversion
-    ///////////////////////////////////////////////////////////////////////////////////////////////
+    // /////////////////////////////////////////////////////////////////////////////////////////////
 
     // See also FortranSourceViewer
-    
+
     @Override
-    protected boolean isTabsToSpacesConversionEnabled() {
+    protected boolean isTabsToSpacesConversionEnabled()
+    {
         return FortranPreferences.CONVERT_TABS_TO_SPACES.getValue();
     }
 
     @Override
-    protected void installTabsToSpacesConverter() {
-        ISourceViewer sourceViewer= getSourceViewer();
-        SourceViewerConfiguration config= getSourceViewerConfiguration();
-        if (config != null && sourceViewer instanceof ITextViewerExtension7) {
-            int tabWidth= config.getTabWidth(sourceViewer);
-            tabToSpacesConverter= new TabsToSpacesConverter();
+    protected void installTabsToSpacesConverter()
+    {
+        ISourceViewer sourceViewer = getSourceViewer();
+        SourceViewerConfiguration config = getSourceViewerConfiguration();
+        if (config != null && sourceViewer instanceof ITextViewerExtension7)
+        {
+            int tabWidth = config.getTabWidth(sourceViewer);
+            tabToSpacesConverter = new TabsToSpacesConverter();
             tabToSpacesConverter.setNumberOfSpacesPerTab(tabWidth);
             tabToSpacesConverter.setLineTracker(new DefaultLineTracker());
             tabToSpacesConverter.setNumberOfSpacesPerTab(FortranPreferences.TAB_WIDTH.getValue());
-            ((ITextViewerExtension7) sourceViewer).setTabsToSpacesConverter(tabToSpacesConverter);
-            //updateIndentationMode();
+            ((ITextViewerExtension7)sourceViewer).setTabsToSpacesConverter(tabToSpacesConverter);
+            // updateIndentationMode();
         }
-        else tabToSpacesConverter = null;
+        else
+            tabToSpacesConverter = null;
     }
 
     @Override
-    protected void uninstallTabsToSpacesConverter() {
+    protected void uninstallTabsToSpacesConverter()
+    {
         super.uninstallTabsToSpacesConverter();
         tabToSpacesConverter = null;
     }
 
-    ///////////////////////////////////////////////////////////////////////////////////////////////
+    // /////////////////////////////////////////////////////////////////////////////////////////////
     // Context Menu Contribution
-    ///////////////////////////////////////////////////////////////////////////////////////////////
+    // /////////////////////////////////////////////////////////////////////////////////////////////
 
-    // see org.eclipse.ui.texteditor.AbstractTextEditor#editorContextMenuAboutToShow(org.eclipse.jface.action.IMenuManager)
-    @Override public void editorContextMenuAboutToShow(IMenuManager menu)
+    // see
+    // org.eclipse.ui.texteditor.AbstractTextEditor#editorContextMenuAboutToShow(org.eclipse.jface.action.IMenuManager)
+    @Override
+    public void editorContextMenuAboutToShow(IMenuManager menu)
     {
         super.editorContextMenuAboutToShow(menu);
 
         try
         {
             // Instantiate RefactorMenu using reflection since it's in an optional dependency
-            IContributionItem refactorMenu = (IContributionItem)Class.forName("org.eclipse.rephraserengine.ui.menus.RefactorMenu").newInstance(); //$NON-NLS-1$
-            
+            IContributionItem refactorMenu = (IContributionItem)Class.forName(
+                "org.eclipse.rephraserengine.ui.menus.RefactorMenu").newInstance(); //$NON-NLS-1$
+
             MenuManager refactorSubmenu = new MenuManager("Refactor"); //$NON-NLS-1$
             refactorSubmenu.add(refactorMenu);
-            menu.appendToGroup(ITextEditorActionConstants.GROUP_EDIT, refactorSubmenu); // cf. CEditor#createActions()
-            //menu.add(refactorSubmenu);
+            menu.appendToGroup(ITextEditorActionConstants.GROUP_EDIT, refactorSubmenu); // cf.
+                                                                                        // CEditor#createActions()
+            // menu.add(refactorSubmenu);
         }
         catch (Throwable x)
         {
@@ -252,9 +338,9 @@ public class FortranEditor extends CDTBasedTextEditor implements ISelectionChang
         }
     }
 
-    ///////////////////////////////////////////////////////////////////////////////////////////////
+    // /////////////////////////////////////////////////////////////////////////////////////////////
     // Matching Parenthesis/Bracket Highlighting
-    ///////////////////////////////////////////////////////////////////////////////////////////////
+    // /////////////////////////////////////////////////////////////////////////////////////////////
 
     public static final String MATCHING_PAIRS_ENABLED_PREF_KEY = "matchPairsEnabled"; //$NON-NLS-1$
 
@@ -267,38 +353,46 @@ public class FortranEditor extends CDTBasedTextEditor implements ISelectionChang
     {
         super.configureSourceViewerDecorationSupport(support);
 
-        ICharacterPairMatcher matcher = new DefaultCharacterPairMatcher(CHAR_PAIRS_TO_MATCH, IDocumentExtension3.DEFAULT_PARTITIONING, true);
+        ICharacterPairMatcher matcher = new DefaultCharacterPairMatcher(CHAR_PAIRS_TO_MATCH,
+            IDocumentExtension3.DEFAULT_PARTITIONING, true);
         support.setCharacterPairMatcher(matcher);
-        support.setMatchingCharacterPainterPreferenceKeys(MATCHING_PAIRS_ENABLED_PREF_KEY, MATCHING_PAIRS_COLOR_PREF_KEY);
+        support.setMatchingCharacterPainterPreferenceKeys(MATCHING_PAIRS_ENABLED_PREF_KEY,
+            MATCHING_PAIRS_COLOR_PREF_KEY);
     }
 
-    ///////////////////////////////////////////////////////////////////////////////////////////////
+    // /////////////////////////////////////////////////////////////////////////////////////////////
     // Editor Folding
-    ///////////////////////////////////////////////////////////////////////////////////////////////
+    // /////////////////////////////////////////////////////////////////////////////////////////////
 
-    //protected ProjectionSupport projectionSupport;
-    //protected Annotation[] oldAnnotations;
+    // protected ProjectionSupport projectionSupport;
+    // protected Annotation[] oldAnnotations;
     protected ProjectionAnnotationModel annotationModel;
 
-    @Override protected ISourceViewer createSourceViewer(Composite parent, IVerticalRuler ruler, int styles)
+    @Override
+    protected ISourceViewer createSourceViewer(Composite parent, IVerticalRuler ruler, int styles)
     {
-        //fAnnotationAccess = createAnnotationAccess();
-        //fOverviewRuler = createOverviewRuler(getSharedColors());
+        // fAnnotationAccess = createAnnotationAccess();
+        // fOverviewRuler = createOverviewRuler(getSharedColors());
 
-        ISourceViewer sourceViewer = new FortranSourceViewer(parent, ruler, getOverviewRuler(), isOverviewRulerVisible(), styles);
+        ISourceViewer sourceViewer = new FortranSourceViewer(parent, ruler, getOverviewRuler(),
+            isOverviewRulerVisible(), styles);
 
-        getSourceViewerDecorationSupport(sourceViewer); // Ensure decoration support has been created and configured
+        getSourceViewerDecorationSupport(sourceViewer); // Ensure decoration support has been
+                                                        // created and configured
 
         return sourceViewer;
     }
 
     private void installProjectionSupport()
     {
-        ProjectionViewer viewer =(ProjectionViewer)getSourceViewer();
+        ProjectionViewer viewer = (ProjectionViewer)getSourceViewer();
 
-        ProjectionSupport projectionSupport = new ProjectionSupport(viewer, getAnnotationAccess(), getSharedColors());
-        projectionSupport.addSummarizableAnnotationType("org.eclipse.ui.workbench.texteditor.error"); //$NON-NLS-1$
-        projectionSupport.addSummarizableAnnotationType("org.eclipse.ui.workbench.texteditor.warning"); //$NON-NLS-1$
+        ProjectionSupport projectionSupport = new ProjectionSupport(viewer, getAnnotationAccess(),
+            getSharedColors());
+        projectionSupport
+            .addSummarizableAnnotationType("org.eclipse.ui.workbench.texteditor.error"); //$NON-NLS-1$
+        projectionSupport
+            .addSummarizableAnnotationType("org.eclipse.ui.workbench.texteditor.warning"); //$NON-NLS-1$
         projectionSupport.install();
 
         viewer.doOperation(ProjectionViewer.TOGGLE); // Turn projection mode on
@@ -319,7 +413,8 @@ public class FortranEditor extends CDTBasedTextEditor implements ISelectionChang
         }
     }
 
-    private HashMap<ProjectionAnnotation, Position> mapAnnotationsToPositions(ArrayList<Position> positions)
+    private HashMap<ProjectionAnnotation, Position> mapAnnotationsToPositions(
+        ArrayList<Position> positions)
     {
         HashMap<ProjectionAnnotation, Position> newAnnotations = new HashMap<ProjectionAnnotation, Position>();
         for (int i = 0; i < positions.size(); i++)
@@ -331,102 +426,104 @@ public class FortranEditor extends CDTBasedTextEditor implements ISelectionChang
         return newAnnotations;
     }
 
-//    ///////////////////////////////////////////////////////////////////////////////////////////////
-//    // Watermark Indicating Source Form Mismatch
-//    ///////////////////////////////////////////////////////////////////////////////////////////////
-//
-//    private void checkForContentTypeMismatch(FileEditorInput input)
-//    {
-//        contentTypeMismatch = false;
-//
-//        IFile file = input.getFile();
-//        if (file == null || file.getProject() == null || file.getName() == null) return;
-//
-//        String contentType = CoreModel.getRegistedContentTypeId(file.getProject(), file.getName());
-//        if (contentType == null) return;
-//
-//        boolean expectedSourceForm = this.isFixedForm();
-//        boolean actualSourceForm = SourceForm.isFixedForm(file);
-//        if (actualSourceForm != expectedSourceForm)
-//            contentTypeMismatch = true;
-//    }
-//
-//    private void addWatermark(Composite parent)
-//    {
-//        ISourceViewer sourceViewer = getSourceViewer();
-//        if (sourceViewer instanceof ITextViewerExtension2)
-//        {
-//            ITextViewerExtension2 painter = (ITextViewerExtension2)sourceViewer;
-//            painter.addPainter(new WatermarkPainter());
-//        }
-//    }
-//
-//    public final class WatermarkPainter implements IPainter
-//    {
-//        private boolean active = false;
-//        private StyledText widget = null;
-//        private PaintListener listener = null;
-//
-//        public void paint(int reason)
-//        {
-//            if (!active)
-//            {
-//                active = true;
-//                widget = FortranEditor.this.getSourceViewer().getTextWidget();
-//                final Font font = new Font(null, new FontData("Arial", 14, SWT.NORMAL)); //$NON-NLS-1$
-//                final Color lightGray = new Color(null, new RGB(192, 192, 192));
-//                listener = new PaintListener()
-//                {
-//                    public void paintControl(PaintEvent e)
-//                    {
-//                        if (widget == null || contentTypeMismatch == false) return;
-//
-////                        String msg = "WARNING: This file is open in a "
-////                                   + (isFixedForm() ? "fixed-form" : "free-form")
-////                                   + " editor,\nbut the platform content type "
-////                                   + "indicates that it is a "
-////                                   + (isFixedForm() ? "free-form" : "fixed-form")
-////                                   + " file.";
-//                        String msg = "WARNING: Content type mismatch     "; //$NON-NLS-1$
-//                        Rectangle area = widget.getClientArea();
-//                        e.gc.setFont(font);
-//                        e.gc.setForeground(lightGray);
-//                        int x = Math.max(0, area.x + area.width - e.gc.textExtent(msg).x); //area.x + area.width/2;
-//                        int y = area.y;
-//                        e.gc.drawString(msg, x, y, true);
-//                    }
-//                };
-//                widget.addPaintListener(listener);
-//            }
-//        }
-//
-//        public void dispose()
-//        {
-//            if (listener != null)
-//            {
-//                widget.removePaintListener(listener);
-//                listener = null;
-//            }
-//
-//            widget = null;
-//        }
-//
-//        public void deactivate(boolean redraw) {}
-//        public void setPositionManager(IPaintPositionManager manager) {}
-//    }
+    // ///////////////////////////////////////////////////////////////////////////////////////////////
+    // // Watermark Indicating Source Form Mismatch
+    // ///////////////////////////////////////////////////////////////////////////////////////////////
+    //
+    // private void checkForContentTypeMismatch(FileEditorInput input)
+    // {
+    // contentTypeMismatch = false;
+    //
+    // IFile file = input.getFile();
+    // if (file == null || file.getProject() == null || file.getName() == null) return;
+    //
+    // String contentType = CoreModel.getRegistedContentTypeId(file.getProject(), file.getName());
+    // if (contentType == null) return;
+    //
+    // boolean expectedSourceForm = this.isFixedForm();
+    // boolean actualSourceForm = SourceForm.isFixedForm(file);
+    // if (actualSourceForm != expectedSourceForm)
+    // contentTypeMismatch = true;
+    // }
+    //
+    // private void addWatermark(Composite parent)
+    // {
+    // ISourceViewer sourceViewer = getSourceViewer();
+    // if (sourceViewer instanceof ITextViewerExtension2)
+    // {
+    // ITextViewerExtension2 painter = (ITextViewerExtension2)sourceViewer;
+    // painter.addPainter(new WatermarkPainter());
+    // }
+    // }
+    //
+    // public final class WatermarkPainter implements IPainter
+    // {
+    // private boolean active = false;
+    // private StyledText widget = null;
+    // private PaintListener listener = null;
+    //
+    // public void paint(int reason)
+    // {
+    // if (!active)
+    // {
+    // active = true;
+    // widget = FortranEditor.this.getSourceViewer().getTextWidget();
+    //                final Font font = new Font(null, new FontData("Arial", 14, SWT.NORMAL)); //$NON-NLS-1$
+    // final Color lightGray = new Color(null, new RGB(192, 192, 192));
+    // listener = new PaintListener()
+    // {
+    // public void paintControl(PaintEvent e)
+    // {
+    // if (widget == null || contentTypeMismatch == false) return;
+    //
+    // // String msg = "WARNING: This file is open in a "
+    // // + (isFixedForm() ? "fixed-form" : "free-form")
+    // // + " editor,\nbut the platform content type "
+    // // + "indicates that it is a "
+    // // + (isFixedForm() ? "free-form" : "fixed-form")
+    // // + " file.";
+    //                        String msg = "WARNING: Content type mismatch     "; //$NON-NLS-1$
+    // Rectangle area = widget.getClientArea();
+    // e.gc.setFont(font);
+    // e.gc.setForeground(lightGray);
+    // int x = Math.max(0, area.x + area.width - e.gc.textExtent(msg).x); //area.x + area.width/2;
+    // int y = area.y;
+    // e.gc.drawString(msg, x, y, true);
+    // }
+    // };
+    // widget.addPaintListener(listener);
+    // }
+    // }
+    //
+    // public void dispose()
+    // {
+    // if (listener != null)
+    // {
+    // widget.removePaintListener(listener);
+    // listener = null;
+    // }
+    //
+    // widget = null;
+    // }
+    //
+    // public void deactivate(boolean redraw) {}
+    // public void setPositionManager(IPaintPositionManager manager) {}
+    // }
 
-    ///////////////////////////////////////////////////////////////////////////////////////////////
+    // /////////////////////////////////////////////////////////////////////////////////////////////
     // Ctrl+/ Block Commenting Support
-    ///////////////////////////////////////////////////////////////////////////////////////////////
+    // /////////////////////////////////////////////////////////////////////////////////////////////
 
-    @Override protected void initializeKeyBindingScopes()
+    @Override
+    protected void initializeKeyBindingScopes()
     {
-        setKeyBindingScopes(new String[] { "org.eclipse.ui.textEditorScope", FORTRAN_EDITOR_CONTEXT_ID }); //$NON-NLS-1$
+        setKeyBindingScopes(new String[] {
+                                          "org.eclipse.ui.textEditorScope", FORTRAN_EDITOR_CONTEXT_ID }); //$NON-NLS-1$
     }
 
-    ///////////////////////////////////////////////////////////////////////////////////////////////
+    // /////////////////////////////////////////////////////////////////////////////////////////////
     // Gray Vertical Lines
-    ///////////////////////////////////////////////////////////////////////////////////////////////
+    // /////////////////////////////////////////////////////////////////////////////////////////////
 
     /**
      * Display a light gray line between columns 6/7 and 72/73
@@ -467,50 +564,54 @@ public class FortranEditor extends CDTBasedTextEditor implements ISelectionChang
     private void addHelpListener(Composite parent)
     {
         final IWorkbenchHelpSystem helpSystem = PlatformUI.getWorkbench().getHelpSystem();
-        parent.addHelpListener(new HelpListener() {
-            public void helpRequested(HelpEvent e) {
+        parent.addHelpListener(new HelpListener()
+        {
+            public void helpRequested(HelpEvent e)
+            {
                 IContextProvider provider = new FortranHelpContextProvider(FortranEditor.this);
                 IContext context = provider.getContext(FortranEditor.this);
-                if (context != null) {
+                if (context != null)
+                {
                     helpSystem.displayHelp(context);
                     return;
                 }
-                //helpSystem.displayHelp(ICHelpContextIds.CEDITOR_VIEW);
+                // helpSystem.displayHelp(ICHelpContextIds.CEDITOR_VIEW);
                 helpSystem.displayHelp(HELP_CONTEXT_ID);
-            }});
+            }
+        });
     }
 
-    ///////////////////////////////////////////////////////////////////////////////////////////////
+    // /////////////////////////////////////////////////////////////////////////////////////////////
     // Preference Page Support
-    ///////////////////////////////////////////////////////////////////////////////////////////////
+    // /////////////////////////////////////////////////////////////////////////////////////////////
 
     /**
-     * Returns true if the event will require us to perform a damage and repair
-     * e.g. a color preference change
+     * Returns true if the event will require us to perform a damage and repair e.g. a color
+     * preference change
      */
-    @Override protected boolean affectsTextPresentation(PropertyChangeEvent event)
+    @Override
+    protected boolean affectsTextPresentation(PropertyChangeEvent event)
     {
         return FortranPreferences.respondToPreferenceChange(event.getProperty())
-               || super.affectsTextPresentation(event);
+            || super.affectsTextPresentation(event);
     }
 
-    ///////////////////////////////////////////////////////////////////////////////////////////////
+    // /////////////////////////////////////////////////////////////////////////////////////////////
     // Extensible SourceViewerConfiguration (permits Declaration View, content assist, etc.)
-    ///////////////////////////////////////////////////////////////////////////////////////////////
+    // /////////////////////////////////////////////////////////////////////////////////////////////
 
     protected SourceViewerConfiguration createSourceViewerConfiguration()
     {
         // If org.eclipse.photran.vpg.ui is contributing a SourceViewerConfiguration through the
         // extension point, load it
-        IConfigurationElement[] configs = Platform.getExtensionRegistry().
-            getConfigurationElementsFor(SOURCE_VIEWER_CONFIG_EXTENSION_POINT_ID);
+        IConfigurationElement[] configs = Platform.getExtensionRegistry()
+            .getConfigurationElementsFor(SOURCE_VIEWER_CONFIG_EXTENSION_POINT_ID);
         if (configs.length > 0)
         {
             try
             {
-                IFortranSourceViewerConfigurationFactory factory =
-                    (IFortranSourceViewerConfigurationFactory)
-                    configs[configs.length-1].createExecutableExtension("factory"); //$NON-NLS-1$
+                IFortranSourceViewerConfigurationFactory factory = (IFortranSourceViewerConfigurationFactory)configs[configs.length - 1]
+                    .createExecutableExtension("factory"); //$NON-NLS-1$
                 return factory.create(FortranEditor.this);
             }
             catch (CoreException e)
@@ -523,14 +624,14 @@ public class FortranEditor extends CDTBasedTextEditor implements ISelectionChang
         return new FortranSourceViewerConfiguration(this);
     }
 
-    ///////////////////////////////////////////////////////////////////////////////////////////////
+    // /////////////////////////////////////////////////////////////////////////////////////////////
     // Syntax Highlighting and Outline View Support (Partitioning and Reconciling)
-    ///////////////////////////////////////////////////////////////////////////////////////////////
+    // /////////////////////////////////////////////////////////////////////////////////////////////
 
     protected void configurePartitionScanner(IDocument document)
     {
-        IDocumentPartitioner partitioner = new FastPartitioner(new FortranStmtPartitionScanner(this),
-                                                               FortranStmtPartitionScanner.PARTITION_TYPES);
+        IDocumentPartitioner partitioner = new FastPartitioner(
+            new FortranStmtPartitionScanner(this), FortranStmtPartitionScanner.PARTITION_TYPES);
         partitioner.connect(document);
         document.setDocumentPartitioner(partitioner);
     }
@@ -543,7 +644,8 @@ public class FortranEditor extends CDTBasedTextEditor implements ISelectionChang
     public static class FortranSourceViewerConfiguration extends CDTBasedSourceViewerConfiguration
     {
         protected static final Color WHITE = new Color(null, new RGB(255, 255, 255));
-        //protected static final Color LIGHT_YELLOW = new Color(null, new RGB(255, 255, 191));
+
+        // protected static final Color LIGHT_YELLOW = new Color(null, new RGB(255, 255, 191));
 
         protected PresentationReconciler reconciler;
 
@@ -555,22 +657,24 @@ public class FortranEditor extends CDTBasedTextEditor implements ISelectionChang
         /**
          * Determines the tab width to use in the Fortran editor.
          * <ol>
-         * <li> First, it looks at the custom Fortran editor preference.  If it is
-         *      non-zero, this width is used.
-         * <li> If the custom preference is not set, the workspace-wide text editor
-         *      preference is used instead.
+         * <li>First, it looks at the custom Fortran editor preference. If it is non-zero, this
+         * width is used.
+         * <li>If the custom preference is not set, the workspace-wide text editor preference is
+         * used instead.
          * </ol>
          */
-        @Override public int getTabWidth(ISourceViewer sourceViewer)
+        @Override
+        public int getTabWidth(ISourceViewer sourceViewer)
         {
             return FortranPreferences.TAB_WIDTH.getValue();
         }
-        
+
         /**
          * Returns a list of the possible partitions' content types.
          * @see org.eclipse.jface.text.source.SourceViewerConfiguration#getConfiguredContentTypes(org.eclipse.jface.text.source.ISourceViewer)
          */
-        @Override public String[] getConfiguredContentTypes(ISourceViewer sourceViewer)
+        @Override
+        public String[] getConfiguredContentTypes(ISourceViewer sourceViewer)
         {
             return FortranStmtPartitionScanner.PARTITION_TYPES;
         }
@@ -579,7 +683,8 @@ public class FortranEditor extends CDTBasedTextEditor implements ISelectionChang
          * Sets up rules for syntax highlighting.
          * @see org.eclipse.jface.text.source.SourceViewerConfiguration#getPresentationReconciler(org.eclipse.jface.text.source.ISourceViewer)
          */
-        @Override public IPresentationReconciler getPresentationReconciler(ISourceViewer sourceViewer)
+        @Override
+        public IPresentationReconciler getPresentationReconciler(ISourceViewer sourceViewer)
         {
             if (reconciler == null)
             {
@@ -600,9 +705,14 @@ public class FortranEditor extends CDTBasedTextEditor implements ISelectionChang
 
         private static class EntirePartitionDamager implements IPresentationDamager
         {
-            @Override public void setDocument(IDocument document) { }
+            @Override
+            public void setDocument(IDocument document)
+            {
+            }
 
-            @Override public IRegion getDamageRegion(ITypedRegion partition, DocumentEvent event, boolean documentPartitioningChanged)
+            @Override
+            public IRegion getDamageRegion(ITypedRegion partition, DocumentEvent event,
+                boolean documentPartitioningChanged)
             {
                 return partition;
             }
@@ -637,13 +747,16 @@ public class FortranEditor extends CDTBasedTextEditor implements ISelectionChang
             switch (lineType)
             {
                 case COMMENT:
-                    return new TextAttribute(new Color(null, FortranPreferences.COLOR_COMMENTS.getValue()), null, SWT.NONE);
+                    return new TextAttribute(new Color(null,
+                        FortranPreferences.COLOR_COMMENTS.getValue()), null, SWT.NONE);
 
                 case COMMENT_DIRECTIVE:
-                    return new TextAttribute(new Color(null, FortranPreferences.COLOR_COMMENT_DIRECTIVES.getValue()), null, SWT.NONE);
+                    return new TextAttribute(new Color(null,
+                        FortranPreferences.COLOR_COMMENT_DIRECTIVES.getValue()), null, SWT.NONE);
 
                 case PREPROCESSOR_DIRECTIVE:
-                    return new TextAttribute(new Color(null, FortranPreferences.COLOR_CPP.getValue()), null, SWT.BOLD);
+                    return new TextAttribute(new Color(null,
+                        FortranPreferences.COLOR_CPP.getValue()), null, SWT.BOLD);
 
                 default: // Default to all-black tokens
                     return new TextAttribute(new Color(null, new RGB(0, 0, 0)), null, SWT.NONE);
@@ -655,13 +768,14 @@ public class FortranEditor extends CDTBasedTextEditor implements ISelectionChang
          * <p>
          * Subclasses may override this to provide a content assistant with more functionality.
          */
-        @Override public IContentAssistant getContentAssistant(ISourceViewer sourceViewer)
+        @Override
+        public IContentAssistant getContentAssistant(ISourceViewer sourceViewer)
         {
             ContentAssistant assistant = new ContentAssistant();
             FortranTemplateCompletionProcessor templateProcessor = new FortranTemplateCompletionProcessor();
             for (String partitionType : FortranStmtPartitionScanner.PARTITION_TYPES)
                 assistant.setContentAssistProcessor(templateProcessor, partitionType);
-            assistant.enableAutoActivation(false); //assistant.setAutoActivationDelay(500);
+            assistant.enableAutoActivation(false); // assistant.setAutoActivationDelay(500);
             assistant.setProposalPopupOrientation(IContentAssistant.CONTEXT_INFO_BELOW);
             assistant.setContextInformationPopupBackground(WHITE);
             assistant.setProposalSelectorBackground(WHITE);
@@ -669,18 +783,18 @@ public class FortranEditor extends CDTBasedTextEditor implements ISelectionChang
         }
     }
 
-    ///////////////////////////////////////////////////////////////////////////////////////////////
+    // /////////////////////////////////////////////////////////////////////////////////////////////
     // Utility Methods
-    ///////////////////////////////////////////////////////////////////////////////////////////////
+    // /////////////////////////////////////////////////////////////////////////////////////////////
 
     public boolean isFixedForm()
     {
         IFile file = getIFile();
         if (file != null) return SourceForm.isFixedForm(getIFile());
-        
+
         IEditorInput input = getEditorInput();
         if (input != null) return SourceForm.isFixedForm(input.getName());
-        
+
         return false;
     }
 
@@ -688,17 +802,18 @@ public class FortranEditor extends CDTBasedTextEditor implements ISelectionChang
     {
         IFile file = getIFile();
         if (file != null) return SourceForm.isCPreprocessed(getIFile());
-        
+
         IEditorInput input = getEditorInput();
         if (input != null) return SourceForm.isCPreprocessed(input.getName());
-        
+
         return false;
     }
 
     public IFile getIFile()
     {
         IEditorInput input = getEditorInput();
-        return (input != null && input instanceof IFileEditorInput ? ((IFileEditorInput)input).getFile() : null);
+        return (input != null && input instanceof IFileEditorInput ? ((IFileEditorInput)input)
+            .getFile() : null);
     }
 
     public IDocument getIDocument()
@@ -743,8 +858,7 @@ public class FortranEditor extends CDTBasedTextEditor implements ISelectionChang
         boolean convertTabs = FortranPreferences.CONVERT_TABS_TO_SPACES.getValue();
         if (convertTabs && tabToSpacesConverter == null)
             installTabsToSpacesConverter();
-        else if (!convertTabs && tabToSpacesConverter != null)
-            uninstallTabsToSpacesConverter();
+        else if (!convertTabs && tabToSpacesConverter != null) uninstallTabsToSpacesConverter();
 
         if (tabToSpacesConverter != null)
             tabToSpacesConverter.setNumberOfSpacesPerTab(FortranPreferences.TAB_WIDTH.getValue());
