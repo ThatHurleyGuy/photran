@@ -1,4 +1,25 @@
 - Roles (5 min)
 - "User Stories" (10 min)
+	Milestone1
+
+	add IMarker (Victor, Smit)
+	add MenuItem to Refactor menu (Sergey, Dennis)
+	Examples of problem (Before and after) (Sean)
+	Read fortran docs / learn fortran (Chase, Victor)
+
+	-------------------
+	Milestone2
+
+	Detect when there is a problem
+	Tests!!
+	how to insert interface into code
+	Move external subroutine
+
+	------------------
+	Milestone3
+
+	Extract
+	Properly parameterize interface
+	
 - "Examples" (5 min)
 - "Markers and menu items" (10 min)
