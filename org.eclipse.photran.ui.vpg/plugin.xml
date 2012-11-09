@@ -16,6 +16,8 @@
 
       <group><!-- Rename and Move -->
          <editorRefactoring command="org.eclipse.photran.ui.RenameRefactoringCommand" />
+         <editorRefactoring
+               command="org.eclipse.photran.ui.vpg.command1"></editorRefactoring>
       </group>
       <group><!-- Extract XYZ -->
          <editorRefactoring command="org.eclipse.photran.ui.ExtractProcedureRefactoringCommand" />
@@ -258,6 +260,11 @@
             categoryId="org.eclipse.photran.ui.RefactoringCategory"
             id="org.eclipse.photran.ui.TransformToDerivedDataTypeRefactoringCommand">
       </command>
+      <command
+            categoryId="org.eclipse.photran.ui.RefactoringCategory"
+            id="org.eclipse.photran.ui.vpg.command1"
+            name="Test">
+      </command>
    </extension>
 
    <!-- 2. Optionally associate the command with an accelerator key -->
@@ -358,6 +365,12 @@
                definitionId="org.eclipse.photran.ui.TransformToDerivedDataTypeRefactoringCommand"
                class="org.eclipse.photran.internal.ui.refactoring.TransformToDerivedDataTypeAction"
                id="org.eclipse.photran.ui.TransformToDerivedDataTypeRefactoringAction"/>
+         <action
+               definitionId="org.eclipse.photran.ui.vpg.command1"
+               id="org.eclipse.photran.ui.vpg.action3"
+               label="Test"
+               style="push">
+         </action>
       </actionSet>
    </extension>
 
@@ -485,6 +498,12 @@
 	           class="org.eclipse.photran.internal.ui.actions.CorrectIndentationAction" 
 	           menubarPath="group.edit" 
 	           id="org.eclipse.photran.ui.ReindenterMenuAction"/>
+      <action
+            class="org.eclipse.photran.ui.vpg.Action1"
+            id="org.eclipse.photran.ui.vpg.action1"
+            label="Test Option"
+            menubarPath="group.edit">
+      </action>
 	  </viewerContribution>
    </extension>
    <extension
@@ -779,6 +798,12 @@
                definitionId="org.eclipse.photran.ui.EasterEggCommand"
                class="org.eclipse.photran.internal.ui.actions.EasterEggAction"
                id="org.eclipse.photran.ui.EasterEggAction"/>
+         <action
+               id="org.eclipse.photran.ui.vpg.action1"
+               label="TEST"
+               menubarPath="org.eclipse.jdt.ui.refactoring.menu/debugging/debugging"
+               style="push">
+         </action>
       </actionSet>
    </extension>
    <extension
