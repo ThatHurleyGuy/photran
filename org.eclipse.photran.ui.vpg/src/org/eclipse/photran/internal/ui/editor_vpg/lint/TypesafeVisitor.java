@@ -35,6 +35,10 @@ public class TypesafeVisitor extends ASTVisitor
 
     private HashSet<String> interfaceNodes;
 
+    /**
+     * @param node The IASTNode that should be searched for unsafe calls
+     * @return An ArrayList of all of the unsafe calls within this node
+     */
     public static ArrayList<ASTCallStmtNode> getUnsafeCalls(IASTNode node) {
         TypesafeVisitor visitor = new TypesafeVisitor();
         node.accept(visitor);
@@ -47,6 +51,9 @@ public class TypesafeVisitor extends ASTVisitor
         interfaceNodes = new HashSet<String>();
     }
 
+    /**
+     * @return An ArrayList of all of the unsafe calls within this node
+     */
     public ArrayList<ASTCallStmtNode> getCallDifference()
     {
         ArrayList<ASTCallStmtNode> unInterfacedCalls = new ArrayList<ASTCallStmtNode>();
@@ -91,10 +98,10 @@ public class TypesafeVisitor extends ASTVisitor
         super.visitASTUseStmtNode(node);
         System.out.println(node.getName());
 
-        ArrayList<Definition> defs = PhotranVPG.getInstance().findAllModulesNamed(
+        ArrayList<Definition> definitions = PhotranVPG.getInstance().findAllModulesNamed(
             node.getName().getText());
-        Definition def2 = defs.get(0);
-        IFile file = def2.getTokenRef().getFile();
+        Definition definition = definitions.get(0);
+        IFile file = definition.getTokenRef().getFile();
         IFortranAST ast = PhotranVPG.getInstance().acquireTransientAST(file);
         InterfaceFinder finder = new InterfaceFinder();
         ast.accept(finder);
@@ -102,6 +109,12 @@ public class TypesafeVisitor extends ASTVisitor
         interfaceNodes.addAll(finder.getInterfaceNodes());
     }
 
+    /**
+     * 
+     * @author seanhurley
+     * 
+     * Used to find all of the interfaces declared in an AST
+     */
     private class InterfaceFinder extends ASTVisitor
     {
         private HashSet<String> interfaceNodes;
