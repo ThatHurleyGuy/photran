@@ -74,6 +74,7 @@ public class TypesafeVisitor extends ASTVisitor
     public void visitASTCallStmtNode(ASTCallStmtNode node)
     {
         super.visitASTCallStmtNode(node);
+        System.out.println("Found call node: " + node.getSubroutineName().toString());
         callNodes.add(node);
     }
 
