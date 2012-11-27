@@ -249,7 +249,7 @@ public class FortranEditor extends CDTBasedTextEditor implements ISelectionChang
                         }
                         catch (CoreException ex)
                         {
-                            ;
+                            
                         }
 
                     }
@@ -262,7 +262,7 @@ public class FortranEditor extends CDTBasedTextEditor implements ISelectionChang
                 }
                 catch (CoreException e)
                 {
-                    ;
+                    
                 }                
 
             }
