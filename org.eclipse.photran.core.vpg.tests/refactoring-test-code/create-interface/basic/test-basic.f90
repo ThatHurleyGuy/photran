@@ -1,4 +1,4 @@
-PROGRAM Area !<<<<<)
+PROGRAM Area !<<<<<14,1,24,28 pass
 
 IMPLICIT NONE
 
