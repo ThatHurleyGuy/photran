@@ -15,7 +15,7 @@ import org.eclipse.jface.text.IRegion;
 import org.eclipse.jface.text.source.ISourceViewer;
 import org.eclipse.photran.internal.core.vpg.PhotranVPG;
 import org.eclipse.photran.internal.ui.editor.FortranEditor;
-import org.eclipse.photran.internal.ui.editor_vpg.lint.ASTTest;
+import org.eclipse.photran.internal.ui.editor_vpg.lint.TypesafeChecker;
 import org.eclipse.ui.texteditor.ITextEditor;
 
 /**
