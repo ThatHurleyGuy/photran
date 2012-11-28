@@ -6,7 +6,7 @@
  * http://www.eclipse.org/legal/epl-v10.html
  *
  * Contributors:
- *    DFL (TODO COMPANY NAME) - Initial API and implementation
+ *    Dennis Lin (TODO COMPANY NAME) - Initial API and implementation
  *******************************************************************************/
 package org.eclipse.photran.internal.tests.refactoring;
 
