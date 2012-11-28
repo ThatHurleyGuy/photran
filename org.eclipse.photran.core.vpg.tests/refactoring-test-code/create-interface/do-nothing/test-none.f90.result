@@ -16,5 +16,5 @@ END PROGRAM testEmpty
 SUBROUTINE Do_Nothing() 
 IMPLICIT NONE
 REAL :: z
-z  = 6
+z = 6
 END SUBROUTINE Do_Nothing
