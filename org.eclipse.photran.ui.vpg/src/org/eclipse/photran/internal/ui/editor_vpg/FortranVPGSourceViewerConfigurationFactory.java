@@ -16,12 +16,12 @@ import org.eclipse.jface.text.contentassist.IContentAssistant;
 import org.eclipse.jface.text.source.ISourceViewer;
 import org.eclipse.jface.text.source.SourceViewerConfiguration;
 import org.eclipse.photran.internal.ui.editor.FortranEditor;
-import org.eclipse.photran.internal.ui.editor.IFortranSourceViewerConfigurationFactory;
 import org.eclipse.photran.internal.ui.editor.FortranEditor.FortranSourceViewerConfiguration;
+import org.eclipse.photran.internal.ui.editor.IFortranSourceViewerConfigurationFactory;
 import org.eclipse.photran.internal.ui.editor_vpg.contentassist.FortranCompletionProcessor;
 import org.eclipse.photran.internal.ui.editor_vpg.folding.FortranFoldingProvider;
 import org.eclipse.photran.internal.ui.editor_vpg.hover.FortranDeclarationHover;
-import org.eclipse.photran.internal.ui.editor_vpg.lint.ASTTest;
+import org.eclipse.photran.internal.ui.editor_vpg.lint.TypesafeChecker;
 
 /**
  * Factory providing a <code>SourceViewerConfiguration</code> for the Fortran editors which supports
@@ -35,7 +35,7 @@ public class FortranVPGSourceViewerConfigurationFactory implements IFortranSourc
     public SourceViewerConfiguration create(final FortranEditor editor)
     {
         new FortranFoldingProvider().setup(editor);
-        new ASTTest().setup(editor);
+        new TypesafeChecker().setup(editor);
         
         return new FortranSourceViewerConfiguration(editor)
         {
