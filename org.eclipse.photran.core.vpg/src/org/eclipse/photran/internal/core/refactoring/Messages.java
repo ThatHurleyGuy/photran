@@ -499,6 +499,8 @@ public class Messages extends NLS
     public static String VariableCaseRefactoring_Name;
 
     public static String VariableCaseRefactoring_SelectedFileCannotBeParsed;
+    
+    public static String CreateInterfaceRefactoring_Name;
 
     static
     {

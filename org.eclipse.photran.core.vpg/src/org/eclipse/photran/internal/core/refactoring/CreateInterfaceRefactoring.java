@@ -63,7 +63,7 @@ public class CreateInterfaceRefactoring extends FortranEditorRefactoring
     public String getName()
     {
         // TODO Auto-generated method stub
-        return null;
+        return Messages.CreateInterfaceRefactoring_Name;
     }
 
 }
