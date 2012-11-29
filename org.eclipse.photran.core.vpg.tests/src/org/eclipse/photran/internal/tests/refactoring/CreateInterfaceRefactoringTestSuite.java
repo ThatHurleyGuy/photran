@@ -13,6 +13,7 @@ package org.eclipse.photran.internal.tests.refactoring;
 import junit.framework.Test;
 
 import org.eclipse.core.resources.IFile;
+import org.eclipse.photran.internal.core.refactoring.CreateInterfaceRefactoring;
 import org.eclipse.photran.internal.core.refactoring.UnrollLoopRefactoring;
 import org.eclipse.photran.internal.tests.Activator;
 import org.eclipse.photran.internal.tests.PhotranRefactoringTestSuiteFromMarkers;
@@ -26,7 +27,7 @@ public class CreateInterfaceRefactoringTestSuite extends PhotranRefactoringTestS
     private static final String DIR = "refactoring-test-code/create-interface";
     public static Test suite() throws Exception
     {
-        return new UnrollLoopRefactoringTestSuite();
+        return new CreateInterfaceRefactoringTestSuite();
     }
 
     public CreateInterfaceRefactoringTestSuite() throws Exception
