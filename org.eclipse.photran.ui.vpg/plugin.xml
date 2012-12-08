@@ -91,6 +91,11 @@
           </submenu>
       </group>
       <group>
+             <editorRefactoring
+                   class="org.eclipse.photran.internal.core.refactoring.MakeTypesafeRefactoring"
+                   label="Make Typesafe..."/>
+      </group>
+      <group>
           <submenu name="Do Loop"><!-- Loop transformations (for performance improvement) -->
              <editorRefactoring
                  class="org.eclipse.photran.internal.core.refactoring.InterchangeLoopsRefactoring"
@@ -209,6 +214,11 @@
             id="org.eclipse.photran.ui.RenameRefactoringCommand">
       </command>
       <command
+            name="Typesafe..."
+            categoryId="org.eclipse.photran.ui.RefactoringCategory"
+            id="org.eclipse.photran.ui.TypesafeRefactoringCommand">
+      </command>
+      <command
             name="%command.name.0"
             categoryId="org.eclipse.photran.ui.RefactoringCategory"
             id="org.eclipse.photran.ui.ExtractProcedureRefactoringCommand">
@@ -270,6 +280,12 @@
             commandId="org.eclipse.photran.ui.RenameRefactoringCommand"
      />
      <key
+            sequence="M3+M2+Z"
+            schemeId="org.eclipse.ui.defaultAcceleratorConfiguration"
+            contextId="org.eclipse.photran.ui.FortranEditorContext"
+            commandId="org.eclipse.photran.ui.TypesafeRefactoringCommand"
+     />
+     <key
             sequence="M3+M2+M"
             schemeId="org.eclipse.ui.defaultAcceleratorConfiguration"
             contextId="org.eclipse.photran.ui.FortranEditorContext"
@@ -308,6 +324,11 @@
                definitionId="org.eclipse.photran.ui.RenameRefactoringCommand"
                class="org.eclipse.photran.internal.ui.refactoring.RenameAction"
                id="org.eclipse.photran.ui.RenameRefactoringAction"/>
+         <action
+               label="Typesafe..."
+               definitionId="org.eclipse.photran.ui.TypesafeCommand"
+               class="org.eclipse.photran.internal.ui.refactoring.TypesafeAction"
+               id="org.eclipse.photran.ui.TypesafeAction"/>
          <action
                label="%action.label.0"
                definitionId="org.eclipse.photran.ui.ExtractProcedureRefactoringCommand"
