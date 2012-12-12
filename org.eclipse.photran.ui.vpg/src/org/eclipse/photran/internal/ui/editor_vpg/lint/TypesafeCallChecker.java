@@ -49,7 +49,7 @@ public class TypesafeCallChecker implements IFortranEditorASTTask
         DefinitionMap<Definition> defMap)
     {    
         System.out.println("---New Scan---");
-        ArrayList<ASTCallStmtNode> unsafeCalls = new ArrayList<ASTCallStmtNode>();
+        ArrayList<Token> unsafeCalls = new ArrayList<Token>();
         //Iterable< ? extends IASTNode> rootNodes = ast.getRoot().getChildren();
         Iterable< ? extends IASTNode> rootNodes = ast.getChildren();
         for (IASTNode rootNode : rootNodes)
@@ -74,9 +74,9 @@ public class TypesafeCallChecker implements IFortranEditorASTTask
         }
         catch (CoreException e1)
         {
-            // TODO Auto-generated catch block
             e1.printStackTrace();
         }
+
         // remove existing markers created from type safe call scans
         for (IMarker marker : markers ) 
         {
@@ -92,11 +92,10 @@ public class TypesafeCallChecker implements IFortranEditorASTTask
         markers.clear();
 
         // mark all unsafe calls with IMarkers
-        for (ASTCallStmtNode unsafe : unsafeCalls)
+        for (Token token : unsafeCalls)
         {
             try
             {
-                Token token = unsafe.getSubroutineName();
                 IMarker marker = token.getPhysicalFile().getIFile().createMarker(IMarker.PROBLEM);
                 marker.setAttribute(IMarker.SEVERITY, IMarker.SEVERITY_WARNING);
                 marker.setAttribute(IMarker.CHAR_START, token.getFileOffset());

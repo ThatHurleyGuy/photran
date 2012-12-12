@@ -18,13 +18,19 @@ import org.eclipse.core.resources.IFile;
 import org.eclipse.photran.core.IFortranAST;
 import org.eclipse.photran.internal.core.analysis.binding.Definition;
 import org.eclipse.photran.internal.core.analysis.binding.Intrinsic;
+import org.eclipse.photran.internal.core.lexer.Token;
 import org.eclipse.photran.internal.core.parser.ASTCallStmtNode;
+import org.eclipse.photran.internal.core.parser.ASTFunctionArgNode;
+import org.eclipse.photran.internal.core.parser.ASTFunctionReferenceNode;
+import org.eclipse.photran.internal.core.parser.ASTFunctionStmtNode;
 import org.eclipse.photran.internal.core.parser.ASTInterfaceBodyNode;
 import org.eclipse.photran.internal.core.parser.ASTInterfaceStmtNode;
 import org.eclipse.photran.internal.core.parser.ASTIntrinsicListNode;
 import org.eclipse.photran.internal.core.parser.ASTIntrinsicProcedureNameNode;
 import org.eclipse.photran.internal.core.parser.ASTIntrinsicStmtNode;
+import org.eclipse.photran.internal.core.parser.ASTSectionSubscriptNode;
 import org.eclipse.photran.internal.core.parser.ASTUseStmtNode;
+import org.eclipse.photran.internal.core.parser.ASTVarOrFnRefNode;
 import org.eclipse.photran.internal.core.parser.ASTVisitor;
 import org.eclipse.photran.internal.core.parser.IASTNode;
 import org.eclipse.photran.internal.core.vpg.PhotranVPG;
@@ -36,7 +42,7 @@ import org.eclipse.photran.internal.core.vpg.PhotranVPG;
 
 public class TypesafeCallVisitor extends ASTVisitor
 {
-    private Set<ASTCallStmtNode> callNodes;
+    private Set<Token> callNodes;
 
     private HashSet<String> interfaceNodes;
 
@@ -44,7 +50,7 @@ public class TypesafeCallVisitor extends ASTVisitor
      * @param node The IASTNode that should be searched for unsafe calls
      * @return An ArrayList of all of the unsafe calls within this node
      */
-    public static ArrayList<ASTCallStmtNode> getUnsafeCalls(IASTNode node)
+    public static ArrayList<Token> getUnsafeCalls(IASTNode node)
     {
         TypesafeCallVisitor visitor = new TypesafeCallVisitor();
         node.accept(visitor);
@@ -53,21 +59,20 @@ public class TypesafeCallVisitor extends ASTVisitor
 
     public TypesafeCallVisitor()
     {
-        callNodes = new HashSet<ASTCallStmtNode>();
+        callNodes = new HashSet<Token>();
         interfaceNodes = new HashSet<String>();
     }
 
     /**
      * @return An ArrayList of all of the unsafe calls within this node
      */
-    public ArrayList<ASTCallStmtNode> getCallDifference()
+    public ArrayList<Token> getCallDifference()
     {
-        ArrayList<ASTCallStmtNode> unInterfacedCalls = new ArrayList<ASTCallStmtNode>();
-        for (ASTCallStmtNode node : callNodes)
+        ArrayList<Token> unInterfacedCalls = new ArrayList<Token>();
+        for (Token node : callNodes)
         {
 
-            String subroutineName = PhotranVPG.canonicalizeIdentifier(node.getSubroutineName()
-                .getText());
+            String subroutineName = PhotranVPG.canonicalizeIdentifier(node.getText());
             if (!interfaceNodes.contains(subroutineName))
             {
                 System.out.println("Found external call without a matching interface: "
@@ -92,7 +97,7 @@ public class TypesafeCallVisitor extends ASTVisitor
         {
             System.out.println("Found none-intrinsic call node: "
                 + node.getSubroutineName().toString());
-            callNodes.add(node);
+            callNodes.add(node.getSubroutineName());
         }
         else
         {
@@ -103,8 +108,7 @@ public class TypesafeCallVisitor extends ASTVisitor
     @Override
     public void visitASTInterfaceStmtNode(ASTInterfaceStmtNode node) {
         super.visitASTInterfaceStmtNode(node);
-        handleASTInterfaceStmtNode(node);
-    }
+        handleASTInterfaceStmtNode(node); }
 
     @Override
     public void visitASTInterfaceBodyNode(ASTInterfaceBodyNode node)
@@ -128,6 +132,21 @@ public class TypesafeCallVisitor extends ASTVisitor
         ast.accept(finder);
     }
 
+    @Override
+    public void visitASTNode(IASTNode node) {
+        System.out.println(node.getClass());
+    }
+
+    @Override
+    public void visitASTVarOrFnRefNode(ASTVarOrFnRefNode node) {
+        super.visitASTVarOrFnRefNode(node);
+        for(Definition def : PhotranVPG.getInstance().findAllExternalSubprogramsNamed(PhotranVPG.canonicalizeIdentifier(node.getName().toString()))) {
+            // a) must be a function and b) it is external
+            System.out.println("found external function call: " + PhotranVPG.canonicalizeIdentifier(node.getName().getName().getText()));
+            callNodes.add(node.getName().getName());
+        }
+    }
+
     private void handleASTInterfaceStmtNode(ASTInterfaceStmtNode node) 
     {
         // if the interface has a name that it may be called by, add it
@@ -138,9 +157,11 @@ public class TypesafeCallVisitor extends ASTVisitor
 
     private void handleASTInterfaceBodyNode(ASTInterfaceBodyNode node)
     {
-        if( node.getSubroutineStmt() != null )
+        if(node.getSubroutineStmt() != null)
             interfaceNodes.add(PhotranVPG.canonicalizeIdentifier(node.getSubroutineStmt()
                         .getSubroutineName().toString()));
+        if(node.getFunctionStmt() != null)
+            interfaceNodes.add(PhotranVPG.canonicalizeIdentifier(node.getFunctionStmt().getFunctionName().toString()));
     }
 
     /**
