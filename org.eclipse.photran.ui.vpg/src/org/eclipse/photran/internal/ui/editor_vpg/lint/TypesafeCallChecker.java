@@ -31,7 +31,7 @@ import org.eclipse.photran.internal.ui.editor_vpg.IFortranEditorASTTask;
  *
  * @author Sean Hurley, Chase Geigle
  */
-public class TypesafeChecker implements IFortranEditorASTTask
+public class TypesafeCallChecker implements IFortranEditorASTTask
 {
     private ArrayList<IMarker> markers;
 
@@ -54,7 +54,7 @@ public class TypesafeChecker implements IFortranEditorASTTask
             ASTListNode<IASTNode> nodeList = (ASTListNode<IASTNode>)rootNode;
             for (IASTNode node : nodeList)
             {
-                unsafeCalls.addAll(TypesafeVisitor.getUnsafeCalls(node));
+                unsafeCalls.addAll(TypesafeCallVisitor.getUnsafeCalls(node));
             }
         }
 

@@ -33,7 +33,7 @@ import org.eclipse.photran.internal.core.vpg.PhotranVPG;
  * @author seanhurley
  */
 
-public class TypesafeVisitor extends ASTVisitor
+public class TypesafeCallVisitor extends ASTVisitor
 {
     private Set<ASTCallStmtNode> callNodes;
 
@@ -45,12 +45,12 @@ public class TypesafeVisitor extends ASTVisitor
      */
     public static ArrayList<ASTCallStmtNode> getUnsafeCalls(IASTNode node)
     {
-        TypesafeVisitor visitor = new TypesafeVisitor();
+        TypesafeCallVisitor visitor = new TypesafeCallVisitor();
         node.accept(visitor);
         return visitor.getCallDifference();
     }
 
-    public TypesafeVisitor()
+    public TypesafeCallVisitor()
     {
         callNodes = new HashSet<ASTCallStmtNode>();
         interfaceNodes = new HashSet<String>();
