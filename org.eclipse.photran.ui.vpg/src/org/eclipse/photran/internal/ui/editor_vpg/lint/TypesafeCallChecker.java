@@ -14,6 +14,7 @@ package org.eclipse.photran.internal.ui.editor_vpg.lint;
 import java.util.ArrayList;
 
 import org.eclipse.core.resources.IMarker;
+import org.eclipse.core.resources.IResource;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.photran.internal.core.analysis.binding.Definition;
 import org.eclipse.photran.internal.core.lexer.Token;
@@ -28,7 +29,7 @@ import org.eclipse.photran.internal.ui.editor_vpg.FortranEditorTasks;
 import org.eclipse.photran.internal.ui.editor_vpg.IFortranEditorASTTask;
 
 /**
- *
+ * 
  * @author Sean Hurley, Chase Geigle
  */
 public class TypesafeCallChecker implements IFortranEditorASTTask
@@ -58,6 +59,22 @@ public class TypesafeCallChecker implements IFortranEditorASTTask
             }
         }
 
+        try
+        {
+            IMarker [] markers = ast.findFirstToken().getPhysicalFile().getIFile().findMarkers(IMarker.PROBLEM, true , IResource.DEPTH_INFINITE);
+            
+            for(IMarker marker : markers) {
+                Integer attribute = marker.getAttribute(PhotranLint.PHOTRAN_LINT_ATTRIBUTE, -1);
+                if(attribute == PhotranLint.UNSAFE_CALL_VALUE){
+                    marker.delete();
+                }
+            }
+        }
+        catch (CoreException e1)
+        {
+            // TODO Auto-generated catch block
+            e1.printStackTrace();
+        }
         // remove existing markers created from type safe call scans
         for (IMarker marker : markers ) 
         {
