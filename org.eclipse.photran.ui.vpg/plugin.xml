@@ -7,6 +7,12 @@
 
    <!-- NOTE: When adding refactorings, please notify
         Mariano Mendez so he can update www.fortranrefactoring.com.ar -->
+        
+	<extension point="org.eclipse.ui.ide.markerResolution">
+      <markerResolutionGenerator
+         markerType="org.eclipse.core.resources.problemmarker"
+         class="org.eclipse.photran.internal.ui.editor_vpg.lint.PhotranQuickFixer"/>
+   </extension>
 
    <extension
          point="org.eclipse.rephraserengine.ui.refactoring.refactorings">

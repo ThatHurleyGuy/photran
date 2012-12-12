@@ -83,6 +83,7 @@ public class TypesafeChecker implements IFortranEditorASTTask
                 marker.setAttribute(IMarker.CHAR_START, token.getFileOffset());
                 marker.setAttribute(IMarker.CHAR_END, token.getFileOffset()+token.getLength());
                 marker.setAttribute(IMarker.LINE_NUMBER, token.getLine());
+                marker.setAttribute(PhotranLint.PHOTRAN_LINT_ATTRIBUTE, PhotranLint.UNSAFE_CALL_VALUE);
                 marker.setAttribute(IMarker.MESSAGE, "Call to external subroutine is not type safe, consider adding an interface"); //$NON-NLS-1$
                 markers.add(marker);
             }
