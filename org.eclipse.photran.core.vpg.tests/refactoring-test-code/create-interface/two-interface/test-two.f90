@@ -1,5 +1,5 @@
 !taken from http://www.stanford.edu/class/me200c/tutorial_90/09_modules.html
-PROGRAM Area !<<<<< 14,1,24,28,pass
+PROGRAM Area !<<<<< 15,1,25,28,pass
 
 IMPLICIT NONE
 
@@ -7,9 +7,10 @@ REAL :: radius, Area_Circle
 
 radius = 1
 
-CALL Compute_Area(radius, 2)
+CALL Compute_Area(radius, Area_Circle)
 
 END PROGRAM Area
+
 
 SUBROUTINE Compute_Area(r, Area)
 
@@ -22,3 +23,12 @@ REAL, PARAMETER :: Pi = 3.1415927
 Area = Pi * r * r
 
 END SUBROUTINE Compute_Area
+
+
+SUBROUTINE random()
+IMPLICIT NONE
+REAL :: r
+REAL :: a
+r = 1
+CALL Compute_Area(radius, Area_Circle) 
+END SUBROUTINE random

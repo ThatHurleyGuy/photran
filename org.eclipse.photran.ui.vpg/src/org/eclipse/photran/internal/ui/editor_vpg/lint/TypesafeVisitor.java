@@ -17,8 +17,12 @@ import java.util.Set;
 import org.eclipse.core.resources.IFile;
 import org.eclipse.photran.core.IFortranAST;
 import org.eclipse.photran.internal.core.analysis.binding.Definition;
+import org.eclipse.photran.internal.core.analysis.binding.Intrinsic;
 import org.eclipse.photran.internal.core.parser.ASTCallStmtNode;
 import org.eclipse.photran.internal.core.parser.ASTInterfaceBodyNode;
+import org.eclipse.photran.internal.core.parser.ASTIntrinsicListNode;
+import org.eclipse.photran.internal.core.parser.ASTIntrinsicProcedureNameNode;
+import org.eclipse.photran.internal.core.parser.ASTIntrinsicStmtNode;
 import org.eclipse.photran.internal.core.parser.ASTUseStmtNode;
 import org.eclipse.photran.internal.core.parser.ASTVisitor;
 import org.eclipse.photran.internal.core.parser.IASTNode;
@@ -39,12 +43,13 @@ public class TypesafeVisitor extends ASTVisitor
      * @param node The IASTNode that should be searched for unsafe calls
      * @return An ArrayList of all of the unsafe calls within this node
      */
-    public static ArrayList<ASTCallStmtNode> getUnsafeCalls(IASTNode node) {
+    public static ArrayList<ASTCallStmtNode> getUnsafeCalls(IASTNode node)
+    {
         TypesafeVisitor visitor = new TypesafeVisitor();
         node.accept(visitor);
         return visitor.getCallDifference();
     }
-    
+
     public TypesafeVisitor()
     {
         callNodes = new HashSet<ASTCallStmtNode>();
@@ -81,8 +86,17 @@ public class TypesafeVisitor extends ASTVisitor
     public void visitASTCallStmtNode(ASTCallStmtNode node)
     {
         super.visitASTCallStmtNode(node);
-        System.out.println("Found call node: " + node.getSubroutineName().toString());
-        callNodes.add(node);
+        Definition test = Intrinsic.resolve(node.getSubroutineName());
+        if (test == null)
+        {
+            System.out.println("Found none-intrinsic call node: "
+                + node.getSubroutineName().toString());
+            callNodes.add(node);
+        }
+        else
+        {
+            System.out.println("Found Intrinsic call node. Ignoring,");
+        }
     }
 
     @Override
@@ -114,7 +128,7 @@ public class TypesafeVisitor extends ASTVisitor
      * 
      * @author seanhurley
      * 
-     * Used to find all of the interfaces declared in an AST
+     *         Used to find all of the interfaces declared in an AST
      */
     private class InterfaceFinder extends ASTVisitor
     {
@@ -140,5 +154,6 @@ public class TypesafeVisitor extends ASTVisitor
             interfaceNodes.add(PhotranVPG.canonicalizeIdentifier(node.getSubroutineStmt()
                 .getSubroutineName().toString()));
         }
+
     }
 }
