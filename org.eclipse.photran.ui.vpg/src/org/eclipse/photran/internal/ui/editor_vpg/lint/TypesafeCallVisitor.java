@@ -20,6 +20,7 @@ import org.eclipse.photran.internal.core.analysis.binding.Definition;
 import org.eclipse.photran.internal.core.analysis.binding.Intrinsic;
 import org.eclipse.photran.internal.core.parser.ASTCallStmtNode;
 import org.eclipse.photran.internal.core.parser.ASTInterfaceBodyNode;
+import org.eclipse.photran.internal.core.parser.ASTInterfaceStmtNode;
 import org.eclipse.photran.internal.core.parser.ASTIntrinsicListNode;
 import org.eclipse.photran.internal.core.parser.ASTIntrinsicProcedureNameNode;
 import org.eclipse.photran.internal.core.parser.ASTIntrinsicStmtNode;
@@ -100,11 +101,16 @@ public class TypesafeCallVisitor extends ASTVisitor
     }
 
     @Override
+    public void visitASTInterfaceStmtNode(ASTInterfaceStmtNode node) {
+        super.visitASTInterfaceStmtNode(node);
+        handleASTInterfaceStmtNode(node);
+    }
+
+    @Override
     public void visitASTInterfaceBodyNode(ASTInterfaceBodyNode node)
     {
         super.visitASTInterfaceBodyNode(node);
-        interfaceNodes.add(PhotranVPG.canonicalizeIdentifier(node.getSubroutineStmt()
-            .getSubroutineName().toString()));
+        handleASTInterfaceBodyNode(node);
     }
 
     @Override
@@ -118,10 +124,23 @@ public class TypesafeCallVisitor extends ASTVisitor
         Definition definition = definitions.get(0);
         IFile file = definition.getTokenRef().getFile();
         IFortranAST ast = PhotranVPG.getInstance().acquireTransientAST(file);
-        InterfaceFinder finder = new InterfaceFinder();
+        InterfaceFinder finder = new InterfaceFinder(this);
         ast.accept(finder);
+    }
 
-        interfaceNodes.addAll(finder.getInterfaceNodes());
+    private void handleASTInterfaceStmtNode(ASTInterfaceStmtNode node) 
+    {
+        // if the interface has a name that it may be called by, add it
+        // to the list of safe call names
+        if(node.getGenericName() != null)
+            interfaceNodes.add(PhotranVPG.canonicalizeIdentifier(node.getGenericName().toString()));
+    }
+
+    private void handleASTInterfaceBodyNode(ASTInterfaceBodyNode node)
+    {
+        if( node.getSubroutineStmt() != null )
+            interfaceNodes.add(PhotranVPG.canonicalizeIdentifier(node.getSubroutineStmt()
+                        .getSubroutineName().toString()));
     }
 
     /**
@@ -132,28 +151,23 @@ public class TypesafeCallVisitor extends ASTVisitor
      */
     private class InterfaceFinder extends ASTVisitor
     {
-        private HashSet<String> interfaceNodes;
+        private TypesafeCallVisitor visitor;
 
-        public InterfaceFinder()
+        public InterfaceFinder(TypesafeCallVisitor visitor)
         {
-            this.interfaceNodes = new HashSet<String>();
+            this.visitor = visitor;
         }
 
-        /**
-         * @return the interfaceNodes
-         */
-        public HashSet<String> getInterfaceNodes()
+        @Override
+        public void visitASTInterfaceStmtNode(ASTInterfaceStmtNode node)
         {
-            return interfaceNodes;
+            visitor.handleASTInterfaceStmtNode(node);
         }
 
         @Override
         public void visitASTInterfaceBodyNode(ASTInterfaceBodyNode node)
         {
-            super.visitASTInterfaceBodyNode(node);
-            interfaceNodes.add(PhotranVPG.canonicalizeIdentifier(node.getSubroutineStmt()
-                .getSubroutineName().toString()));
+            visitor.handleASTInterfaceBodyNode(node);
         }
-
     }
 }
