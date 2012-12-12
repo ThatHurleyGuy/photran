@@ -6,7 +6,8 @@
  * http://www.eclipse.org/legal/epl-v10.html
  *
  * Contributors:
- *    seanhurley (TODO COMPANY NAME) - Initial API and implementation
+ *    Sean Hurley (UIUC) - Initial API and implementation
+ *    Chase Geigle (UIUC) - External Function handling
  *******************************************************************************/
 package org.eclipse.photran.internal.ui.editor_vpg.lint;
 
@@ -20,15 +21,8 @@ import org.eclipse.photran.internal.core.analysis.binding.Definition;
 import org.eclipse.photran.internal.core.analysis.binding.Intrinsic;
 import org.eclipse.photran.internal.core.lexer.Token;
 import org.eclipse.photran.internal.core.parser.ASTCallStmtNode;
-import org.eclipse.photran.internal.core.parser.ASTFunctionArgNode;
-import org.eclipse.photran.internal.core.parser.ASTFunctionReferenceNode;
-import org.eclipse.photran.internal.core.parser.ASTFunctionStmtNode;
 import org.eclipse.photran.internal.core.parser.ASTInterfaceBodyNode;
 import org.eclipse.photran.internal.core.parser.ASTInterfaceStmtNode;
-import org.eclipse.photran.internal.core.parser.ASTIntrinsicListNode;
-import org.eclipse.photran.internal.core.parser.ASTIntrinsicProcedureNameNode;
-import org.eclipse.photran.internal.core.parser.ASTIntrinsicStmtNode;
-import org.eclipse.photran.internal.core.parser.ASTSectionSubscriptNode;
 import org.eclipse.photran.internal.core.parser.ASTUseStmtNode;
 import org.eclipse.photran.internal.core.parser.ASTVarOrFnRefNode;
 import org.eclipse.photran.internal.core.parser.ASTVisitor;
