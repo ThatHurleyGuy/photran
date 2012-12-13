@@ -47,7 +47,10 @@ public class TypesafeCallChecker implements IFortranEditorASTTask
     public boolean handle(ASTExecutableProgramNode ast, TokenList tokenList,
         DefinitionMap<Definition> defMap)
     {    
+        if (defMap == null) return true;
+
         System.out.println("---New Scan---");
+
         ArrayList<Token> unsafeCalls = new ArrayList<Token>();
         //Iterable< ? extends IASTNode> rootNodes = ast.getRoot().getChildren();
         Iterable< ? extends IASTNode> rootNodes = ast.getChildren();
@@ -101,6 +104,7 @@ public class TypesafeCallChecker implements IFortranEditorASTTask
                 marker.setAttribute(IMarker.CHAR_END, token.getFileOffset()+token.getLength());
                 marker.setAttribute(IMarker.LINE_NUMBER, token.getLine());
                 marker.setAttribute(PhotranLint.PHOTRAN_LINT_ATTRIBUTE, PhotranLint.UNSAFE_CALL_VALUE);
+                marker.setAttribute(PhotranLint.PHOTRAN_LINT_EXTRA, token.getText());
                 marker.setAttribute(IMarker.MESSAGE, Messages.FortranEditorTasks_Lint_CallToExternalSubroutineUnsafe);
                 markers.add(marker);
             }
