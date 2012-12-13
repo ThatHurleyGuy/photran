@@ -502,6 +502,38 @@ public class Messages extends NLS
     
     public static String CreateInterfaceRefactoring_Name;
 
+    public static String TypesafeRefactoring_Name;
+
+    public static String TypesafeRefactoring_PleaseSelectAnIdentifier;
+
+    public static String TypesafeRefactoring_NoDeclarationFoundFor;
+
+    public static String TypesafeRefactoring_MultipleDeclarationsFoundFor;
+
+    public static String TypesafeRefactoring_NewNameIsExactlyTheSame;
+
+    public static String TypesafeRefactoring_NameConflicts;
+
+    public static String TypesafeRefactoring_NameMightConflict;
+
+    public static String TypesafeRefactoring_ChangingNameWouldChangeMeaning;
+
+    public static String TypesafeRefactoring_FixedFormFileWillNotBeRefactored;
+
+    public static String TypesafeRefactoring_CPreprocessedFileWillNotBeRefactored;
+
+    public static String TypesafeRefactoring_StatusCheckingIfReferencesInFileCanBeTypesafed;
+
+    public static String TypesafeRefactoring_CannotRenameAmbiguous;
+
+    public static String TypesafeRefactoring_CannotRenameUsedInINCLUDEFile;
+
+    public static String TypesafeRefactoring_StatusTypesafing;
+
+    public static String TypesafeRefactoring_StatusModifyingFile;
+
+    public static String TypesafeRefactoring_CannotTypesafe;
+    
     static
     {
         // initialize resource bundle
