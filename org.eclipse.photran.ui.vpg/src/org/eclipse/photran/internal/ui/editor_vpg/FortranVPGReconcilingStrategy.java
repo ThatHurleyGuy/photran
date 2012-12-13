@@ -13,7 +13,9 @@ package org.eclipse.photran.internal.ui.editor_vpg;
 import org.eclipse.cdt.internal.ui.text.CCompositeReconcilingStrategy;
 import org.eclipse.jface.text.IRegion;
 import org.eclipse.jface.text.source.ISourceViewer;
+import org.eclipse.photran.internal.core.vpg.PhotranVPG;
 import org.eclipse.photran.internal.ui.editor.FortranEditor;
+import org.eclipse.photran.internal.ui.editor_vpg.lint.TypesafeCallChecker;
 import org.eclipse.ui.texteditor.ITextEditor;
 
 /**
