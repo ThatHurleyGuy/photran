@@ -10,28 +10,21 @@
  *******************************************************************************/
 package org.eclipse.photran.internal.core.refactoring;
 
-import java.io.StringReader;
 import java.util.ArrayList;
 import java.util.HashSet;
 
-import org.eclipse.core.resources.IFile;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.OperationCanceledException;
 import org.eclipse.ltk.core.refactoring.RefactoringStatus;
-import org.eclipse.photran.core.IFortranAST;
 import org.eclipse.photran.internal.core.analysis.binding.Definition;
-import org.eclipse.photran.internal.core.lexer.ASTLexerFactory;
-import org.eclipse.photran.internal.core.lexer.IAccumulatingLexer;
 import org.eclipse.photran.internal.core.lexer.Token;
-import org.eclipse.photran.internal.core.parser.ASTCallStmtNode;
 import org.eclipse.photran.internal.core.parser.ASTEntityDeclNode;
 import org.eclipse.photran.internal.core.parser.ASTFunctionParNode;
 import org.eclipse.photran.internal.core.parser.ASTFunctionStmtNode;
 import org.eclipse.photran.internal.core.parser.ASTSubroutineParNode;
 import org.eclipse.photran.internal.core.parser.ASTSubroutineStmtNode;
 import org.eclipse.photran.internal.core.parser.ASTTypeDeclarationStmtNode;
-import org.eclipse.photran.internal.core.parser.ASTVarOrFnRefNode;
 import org.eclipse.photran.internal.core.parser.ASTVisitor;
 import org.eclipse.photran.internal.core.parser.IASTListNode;
 import org.eclipse.photran.internal.core.parser.IASTNode;
@@ -56,8 +49,6 @@ public class IntroduceInterfaceRefactoring extends FortranEditorRefactoring
         ensureProjectHasRefactoringEnabled(status);
 
         Token token = findEnclosingToken(this.astOfFileInEditor, this.selectedRegionInEditor);
-        for (Definition def : token.resolveBinding())
-            fail("Select a call to an external subroutine or function.");
         if (PhotranVPG.getInstance().findAllExternalSubprogramsNamed(token.getText()).isEmpty())
             fail("Select a call to an external subroutine or function.");
     }
