@@ -102,7 +102,6 @@ public class TypesafeCallChecker implements IFortranEditorASTTask
                 marker.setAttribute(IMarker.SEVERITY, IMarker.SEVERITY_WARNING);
                 marker.setAttribute(IMarker.CHAR_START, token.getFileOffset());
                 marker.setAttribute(IMarker.CHAR_END, token.getFileOffset()+token.getLength());
-                marker.setAttribute(IMarker.LINE_NUMBER, token.getLine());
                 marker.setAttribute(PhotranLint.PHOTRAN_LINT_ATTRIBUTE, PhotranLint.UNSAFE_CALL_VALUE);
                 marker.setAttribute(PhotranLint.PHOTRAN_LINT_EXTRA, token.getText());
                 marker.setAttribute(IMarker.MESSAGE, Messages.FortranEditorTasks_Lint_CallToExternalSubroutineUnsafe);

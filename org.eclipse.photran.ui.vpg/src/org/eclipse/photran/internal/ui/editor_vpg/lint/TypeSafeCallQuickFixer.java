@@ -14,8 +14,15 @@ import java.io.StringReader;
 import java.util.ArrayList;
 import java.util.HashSet;
 
+import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IMarker;
+import org.eclipse.core.runtime.CoreException;
+import org.eclipse.core.runtime.NullProgressMonitor;
+import org.eclipse.core.runtime.OperationCanceledException;
 import org.eclipse.jface.dialogs.MessageDialog;
+import org.eclipse.jface.text.TextSelection;
+import org.eclipse.ltk.core.refactoring.Change;
+import org.eclipse.ltk.core.refactoring.RefactoringStatus;
 import org.eclipse.photran.core.IFortranAST;
 import org.eclipse.photran.internal.core.FortranAST;
 import org.eclipse.photran.internal.core.analysis.binding.Definition;
@@ -33,6 +40,7 @@ import org.eclipse.photran.internal.core.parser.ASTVisitor;
 import org.eclipse.photran.internal.core.parser.IASTListNode;
 import org.eclipse.photran.internal.core.parser.IBodyConstruct;
 import org.eclipse.photran.internal.core.parser.Parser;
+import org.eclipse.photran.internal.core.refactoring.CreateInterfaceRefactoring;
 import org.eclipse.photran.internal.core.vpg.PhotranVPG;
 import org.eclipse.photran.internal.ui.editor_vpg.Messages;
 import org.eclipse.ui.IMarkerResolution;
@@ -42,7 +50,7 @@ import org.eclipse.ui.IMarkerResolution;
  * @author seanhurley
  */
 public class TypeSafeCallQuickFixer implements IMarkerResolution
-    {
+{
     private String label;
 
     protected static String EOL = System.getProperty("line.separator"); //$NON-NLS-1$
@@ -60,30 +68,69 @@ public class TypeSafeCallQuickFixer implements IMarkerResolution
     public void run(IMarker marker)
     {
         insertInterface(marker);
+        callRefactoring(marker);
         MessageDialog.openInformation(null, "QuickFix Demo",
             "This quick-fix is not yet implemented");
     }
 
+    public void callRefactoring(IMarker marker)
+    {
+        CreateInterfaceRefactoring refactoring = new CreateInterfaceRefactoring();
+        TextSelection selection = new TextSelection(marker.getAttribute(IMarker.CHAR_START, 0), marker.getAttribute(IMarker.CHAR_END, 0));
+        refactoring.initialize((IFile)marker.getResource(), selection);
+        RefactoringStatus status = refactoring.checkFinalConditions(new NullProgressMonitor());
+        if ( !status.isOK()) {
+            //Tell the user
+            MessageDialog.openInformation(null, "Create Typesafe Interace",
+                "Something Went Wrong");
+        }
+        refactoring.checkFinalConditions(new NullProgressMonitor());
+        Change change;
+        try
+        {
+            change = refactoring.createChange(new NullProgressMonitor());
+            change.perform(new NullProgressMonitor());
+        }
+        catch (OperationCanceledException e)
+        {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
+        catch (CoreException e)
+        {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
+    }
+    
     private void insertInterface(IMarker marker)
     {
         // text name of the call
         String callName = marker.getAttribute(PhotranLint.PHOTRAN_LINT_EXTRA, ""); //$NON-NLS-1$
 
         String iface = null;
-        ArrayList<Definition> defs = PhotranVPG.getInstance().findAllExternalSubprogramsNamed(callName);
-        for (Definition def : defs) {
-            ASTFunctionStmtNode function = def.getTokenRef().getASTNode().findNearestAncestor(ASTFunctionStmtNode.class);
-            if (function != null) {
+        ArrayList<Definition> defs = PhotranVPG.getInstance().findAllExternalSubprogramsNamed(
+            callName);
+        for (Definition def : defs)
+        {
+            ASTFunctionStmtNode function = def.getTokenRef().getASTNode()
+                .findNearestAncestor(ASTFunctionStmtNode.class);
+            if (function != null)
+            {
                 iface = generateFunctionInterface(function);
-            } else {
-                ASTSubroutineStmtNode subroutine = def.getTokenRef().getASTNode().findNearestAncestor(ASTSubroutineStmtNode.class);
+            }
+            else
+            {
+                ASTSubroutineStmtNode subroutine = def.getTokenRef().getASTNode()
+                    .findNearestAncestor(ASTSubroutineStmtNode.class);
                 iface = generateSubroutineInterface(subroutine);
             }
         }
 
         IASTListNode<IBodyConstruct> body = null;
 
-        try {
+        try
+        {
             /** @see FortranResourceRefactoring#parseLiteralStatementSequence */
             StringBuilder prog = new StringBuilder();
             prog.append("program p"); //$NON-NLS-1$
@@ -92,21 +139,23 @@ public class TypeSafeCallQuickFixer implements IMarkerResolution
             prog.append(EOL);
             prog.append("end program"); //$NON-NLS-1$
             IAccumulatingLexer lexer = new ASTLexerFactory().createLexer(
-                    new StringReader(prog.toString()), null, "(none)"); //$NON-NLS-1$
+                new StringReader(prog.toString()), null, "(none)"); //$NON-NLS-1$
             Parser parser = new Parser();
             FortranAST ast = new FortranAST(null, parser.parse(lexer), lexer.getTokenList());
             body = ((ASTMainProgramNode)ast.getRoot().getProgramUnitList().get(0)).getBody();
-        } 
+        }
         catch (Exception e)
         {
             throw new Error(e);
         }
 
         // get the ast associated with the file the marker is on
-        IFortranAST ast = PhotranVPG.getInstance().acquireTransientAST(PhotranVPG.getFilenameForIResource(marker.getResource()));
-        
+        IFortranAST ast = PhotranVPG.getInstance().acquireTransientAST(
+            PhotranVPG.getFilenameForIResource(marker.getResource()));
+
         // grab the scoping node and insert our interface there
-        ScopingNode node = ast.findFirstTokenOnLine(marker.getAttribute(IMarker.LINE_NUMBER, 0)).getEnclosingScope();
+        ScopingNode node = ast.findFirstTokenOnLine(marker.getAttribute(IMarker.LINE_NUMBER, 0))
+            .getEnclosingScope();
     }
 
     private String generateFunctionInterface(ASTFunctionStmtNode function)
@@ -117,16 +166,20 @@ public class TypeSafeCallQuickFixer implements IMarkerResolution
 
         // if we have a result clause, we need the declaration of it in the
         // interface
-        if (function.hasResultClause()) {
-            for (Definition def : function.getName().resolveBinding()) {
+        if (function.hasResultClause())
+        {
+            for (Definition def : function.getName().resolveBinding())
+            {
                 neededDeclarations.add(def.getCanonicalizedName());
                 result = " result(" + def.getCanonicalizedName() + ")"; //$NON-NLS-1$ //$NON-NLS-2$
             }
         }
 
         // we also need the declaration of all function parameters
-        for (ASTFunctionParNode param : function.getFunctionPars()) {
-            for (Definition def : param.getVariableName().resolveBinding()) {
+        for (ASTFunctionParNode param : function.getFunctionPars())
+        {
+            for (Definition def : param.getVariableName().resolveBinding())
+            {
                 neededDeclarations.add(def.getCanonicalizedName());
                 parameters.add(def.getCanonicalizedName());
             }
@@ -143,9 +196,8 @@ public class TypeSafeCallQuickFixer implements IMarkerResolution
         builder.append("function "); //$NON-NLS-1$
         builder.append(function.getFunctionName().getFunctionName().getText());
         builder.append(makeParameterList(parameters));
-        
-        if (function.hasResultClause())
-            builder.append(result);
+
+        if (function.hasResultClause()) builder.append(result);
         builder.append(EOL);
 
         builder.append(visitor.getDeclarations());
@@ -162,8 +214,10 @@ public class TypeSafeCallQuickFixer implements IMarkerResolution
         ArrayList<String> parameters = new ArrayList<String>();
 
         // we also need the declaration of all function parameters
-        for (ASTSubroutineParNode param : subroutine.getSubroutinePars()) {
-            for (Definition def : param.getVariableName().resolveBinding()) {
+        for (ASTSubroutineParNode param : subroutine.getSubroutinePars())
+        {
+            for (Definition def : param.getVariableName().resolveBinding())
+            {
                 neededDeclarations.add(def.getCanonicalizedName());
                 parameters.add(def.getCanonicalizedName());
             }
@@ -194,7 +248,8 @@ public class TypeSafeCallQuickFixer implements IMarkerResolution
     {
         StringBuilder builder = new StringBuilder();
         builder.append("("); //$NON-NLS-1$
-        for (int i = 0; i < parameters.size(); ++i ) {
+        for (int i = 0; i < parameters.size(); ++i)
+        {
             if (i > 0) builder.append(","); //$NON-NLS-1$
             builder.append(parameters.get(i));
         }
@@ -202,16 +257,20 @@ public class TypeSafeCallQuickFixer implements IMarkerResolution
         return builder.toString();
     }
 
-    private class DeclarationVisitor extends ASTVisitor {
+    private class DeclarationVisitor extends ASTVisitor
+    {
         private HashSet<String> vars;
+
         private StringBuilder declarations;
 
-        public DeclarationVisitor(HashSet<String> vars) {
+        public DeclarationVisitor(HashSet<String> vars)
+        {
             this.vars = vars;
             this.declarations = new StringBuilder();
         }
 
-        public String getDeclarations() {
+        public String getDeclarations()
+        {
             return declarations.toString();
         }
 
@@ -219,9 +278,12 @@ public class TypeSafeCallQuickFixer implements IMarkerResolution
         public void visitASTTypeDeclarationStmtNode(ASTTypeDeclarationStmtNode node)
         {
             super.visitASTTypeDeclarationStmtNode(node);
-            for (ASTEntityDeclNode entityDecl : node.getEntityDeclList()) {
-                for (Definition def : entityDecl.getObjectName().getObjectName().resolveBinding()) {
-                    if (vars.contains(def.getCanonicalizedName())) {
+            for (ASTEntityDeclNode entityDecl : node.getEntityDeclList())
+            {
+                for (Definition def : entityDecl.getObjectName().getObjectName().resolveBinding())
+                {
+                    if (vars.contains(def.getCanonicalizedName()))
+                    {
                         declarations.append(node.toString());
                         return;
                     }
