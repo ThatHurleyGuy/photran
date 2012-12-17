@@ -12,19 +12,15 @@ package org.eclipse.photran.internal.ui.editor_vpg.lint;
 
 import java.util.ArrayList;
 
-import org.eclipse.core.resources.IFile;
+import org.eclipse.photran.internal.ui.editor_vpg.Messages;
 import org.eclipse.core.resources.IMarker;
 import org.eclipse.jface.dialogs.MessageDialog;
-import org.eclipse.photran.core.IFortranAST;
 import org.eclipse.photran.internal.core.analysis.binding.Definition;
-import org.eclipse.photran.internal.core.analysis.types.Type;
 import org.eclipse.photran.internal.core.parser.ASTFunctionParNode;
 import org.eclipse.photran.internal.core.parser.ASTFunctionStmtNode;
 import org.eclipse.photran.internal.core.parser.ASTSubroutineParNode;
 import org.eclipse.photran.internal.core.parser.ASTSubroutineStmtNode;
-import org.eclipse.photran.internal.core.parser.IASTNode;
 import org.eclipse.photran.internal.core.vpg.PhotranVPG;
-import org.eclipse.photran.internal.ui.editor_vpg.DefinitionMap;
 import org.eclipse.ui.IMarkerResolution;
 
 /**
@@ -37,7 +33,7 @@ public class TypeSafeCallQuickFixer implements IMarkerResolution
 
     public TypeSafeCallQuickFixer(IMarker marker)
     {
-        this.label = "Quick fix number 1";
+        this.label = Messages.FortranEditorTasks_Lint_QuickFixUnsafeCall;
     }
 
     public String getLabel()
@@ -47,7 +43,6 @@ public class TypeSafeCallQuickFixer implements IMarkerResolution
 
     public void run(IMarker marker)
     {
-        // TODO Tie this in to the actual GUI
         insertInterface(marker);
         MessageDialog.openInformation(null, "QuickFix Demo",
             "This quick-fix is not yet implemented");
