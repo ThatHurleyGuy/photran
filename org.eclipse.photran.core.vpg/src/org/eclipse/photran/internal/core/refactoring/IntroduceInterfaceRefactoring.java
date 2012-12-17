@@ -23,6 +23,7 @@ import org.eclipse.photran.core.IFortranAST;
 import org.eclipse.photran.internal.core.analysis.binding.Definition;
 import org.eclipse.photran.internal.core.lexer.ASTLexerFactory;
 import org.eclipse.photran.internal.core.lexer.IAccumulatingLexer;
+import org.eclipse.photran.internal.core.lexer.Token;
 import org.eclipse.photran.internal.core.parser.ASTCallStmtNode;
 import org.eclipse.photran.internal.core.parser.ASTEntityDeclNode;
 import org.eclipse.photran.internal.core.parser.ASTFunctionParNode;
@@ -47,16 +48,18 @@ public class IntroduceInterfaceRefactoring extends FortranEditorRefactoring
         return "Introduce Interface Refactoring";
     }
 
+    @SuppressWarnings("unused")
     @Override
     protected void doCheckInitialConditions(RefactoringStatus status, IProgressMonitor pm)
         throws PreconditionFailure
     {
         ensureProjectHasRefactoringEnabled(status);
 
-        IASTNode node = findEnclosingNode(this.astOfFileInEditor, this.selectedRegionInEditor);
-
-        if (!(node instanceof ASTVarOrFnRefNode) && !(node instanceof ASTCallStmtNode))
-            fail("Select a call to an external function or subroutine");
+        Token token = findEnclosingToken(this.astOfFileInEditor, this.selectedRegionInEditor);
+        for (Definition def : token.resolveBinding())
+            fail("Select a call to an external subroutine or function.");
+        if (PhotranVPG.getInstance().findAllExternalSubprogramsNamed(token.getText()).isEmpty())
+            fail("Select a call to an external subroutine or function.");
     }
 
     @Override
@@ -80,12 +83,8 @@ public class IntroduceInterfaceRefactoring extends FortranEditorRefactoring
 
     private void insertInterface()
     {
-        IASTNode enclNode = findEnclosingNode(this.astOfFileInEditor, this.selectedRegionInEditor);
-
-        String callName = enclNode.findLastToken().getText();
-        System.out.println("Class: " + enclNode.getClass());
-        System.out.println(this.selectedRegionInEditor.getStartLine() + " at " + this.selectedRegionInEditor.getOffset());
-        System.out.println("Call name: " + callName);
+        Token token = findEnclosingToken(this.astOfFileInEditor, this.selectedRegionInEditor);
+        String callName = token.getText();
         
         String iface = null;
         ArrayList<Definition> defs = PhotranVPG.getInstance().findAllExternalSubprogramsNamed(callName);
@@ -103,9 +102,9 @@ public class IntroduceInterfaceRefactoring extends FortranEditorRefactoring
         IASTListNode<IBodyConstruct> intrNode = parseLiteralStatementSequence(iface);
 
         @SuppressWarnings("unchecked")
-        IASTListNode<IASTNode> body = (IASTListNode<IASTNode>)enclNode.findLastToken().getEnclosingScope().getOrCreateBody();
-        body.addAll(0, intrNode);
-        Reindenter.reindent(intrNode, this.astOfFileInEditor);
+        IASTListNode<IASTNode> body = (IASTListNode<IASTNode>)token.getEnclosingScope().getOrCreateBody();
+        body.addAll(findIndexToInsertStatement(body), intrNode);
+        Reindenter.reindent(intrNode, this.astOfFileInEditor, Reindenter.Strategy.REINDENT_EACH_LINE);
     }
 
     private String generateFunctionInterface(ASTFunctionStmtNode function)

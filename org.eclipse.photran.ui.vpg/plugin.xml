@@ -222,6 +222,9 @@
              <resourceRefactoring
                  class="org.eclipse.photran.internal.core.refactoring.StandardizeStatementsRefactoring"
              />
+             <editorRefactoring
+                 class="org.eclipse.photran.internal.core.refactoring.IntroduceInterfaceRefactoring"
+             />
           </submenu>
       </group>
    </extension>
