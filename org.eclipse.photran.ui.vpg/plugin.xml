@@ -129,11 +129,6 @@
           </submenu>
       </group>
       <group>
-             <editorRefactoring
-                   class="org.eclipse.photran.internal.core.refactoring.MakeTypesafeRefactoring"
-                   label="Make Typesafe..."/>
-      </group>
-      <group>
           <submenu name="Do Loop"><!-- Loop transformations (for performance improvement) -->
              <editorRefactoring
                  class="org.eclipse.photran.internal.core.refactoring.InterchangeLoopsRefactoring"
