@@ -98,7 +98,7 @@ public class TypesafeCallChecker implements IFortranEditorASTTask
         {
             try
             {
-                IMarker marker = token.getPhysicalFile().getIFile().createMarker(IMarker.PROBLEM);
+                IMarker marker = token.getPhysicalFile().getIFile().createMarker("org.eclipse.photran.internal.uic.editor_vpg.lint.marker");
                 marker.setAttribute(IMarker.SEVERITY, IMarker.SEVERITY_WARNING);
                 marker.setAttribute(IMarker.CHAR_START, token.getFileOffset());
                 marker.setAttribute(IMarker.CHAR_END, token.getFileOffset()+token.getLength());
