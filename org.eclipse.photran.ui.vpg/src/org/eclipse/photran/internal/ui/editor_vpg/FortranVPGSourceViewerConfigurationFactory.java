@@ -13,6 +13,7 @@ package org.eclipse.photran.internal.ui.editor_vpg;
 import org.eclipse.cdt.internal.ui.text.CCompositeReconcilingStrategy;
 import org.eclipse.jface.text.ITextHover;
 import org.eclipse.jface.text.contentassist.IContentAssistant;
+import org.eclipse.jface.text.source.IAnnotationHover;
 import org.eclipse.jface.text.source.ISourceViewer;
 import org.eclipse.jface.text.source.SourceViewerConfiguration;
 import org.eclipse.photran.internal.ui.editor.FortranEditor;
@@ -20,6 +21,7 @@ import org.eclipse.photran.internal.ui.editor.FortranEditor.FortranSourceViewerC
 import org.eclipse.photran.internal.ui.editor.IFortranSourceViewerConfigurationFactory;
 import org.eclipse.photran.internal.ui.editor_vpg.contentassist.FortranCompletionProcessor;
 import org.eclipse.photran.internal.ui.editor_vpg.folding.FortranFoldingProvider;
+import org.eclipse.photran.internal.ui.editor_vpg.hover.AnnotationHover;
 import org.eclipse.photran.internal.ui.editor_vpg.hover.FortranDeclarationHover;
 import org.eclipse.photran.internal.ui.editor_vpg.lint.TypesafeCallChecker;
 
@@ -55,6 +57,19 @@ public class FortranVPGSourceViewerConfigurationFactory implements IFortranSourc
             @Override public ITextHover getTextHover(ISourceViewer sourceViewer, String contentType)
             {
                 return new FortranDeclarationHover(sourceViewer, (FortranEditor)editor);
+            }
+            
+            /*
+             * (non-Javadoc)
+             * 
+             * @see
+             * org.eclipse.jface.text.source.SourceViewerConfiguration#getAnnotationHover(org.eclipse
+             * .jface.text.source.ISourceViewer)
+             */
+            @Override
+            public IAnnotationHover getAnnotationHover(ISourceViewer sourceViewer)
+            {
+                return new AnnotationHover();
             }
         };
     }

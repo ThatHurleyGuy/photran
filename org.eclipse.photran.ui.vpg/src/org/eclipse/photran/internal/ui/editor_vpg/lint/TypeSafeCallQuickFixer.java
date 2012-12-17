@@ -34,6 +34,7 @@ import org.eclipse.photran.internal.core.parser.IASTListNode;
 import org.eclipse.photran.internal.core.parser.IBodyConstruct;
 import org.eclipse.photran.internal.core.parser.Parser;
 import org.eclipse.photran.internal.core.vpg.PhotranVPG;
+import org.eclipse.photran.internal.ui.editor_vpg.Messages;
 import org.eclipse.ui.IMarkerResolution;
 
 /**
@@ -48,7 +49,7 @@ public class TypeSafeCallQuickFixer implements IMarkerResolution
 
     public TypeSafeCallQuickFixer(IMarker marker)
     {
-        this.label = "Quick fix number 1";
+        this.label = Messages.FortranEditorTasks_Lint_QuickFixUnsafeCall;
     }
 
     public String getLabel()
@@ -58,7 +59,6 @@ public class TypeSafeCallQuickFixer implements IMarkerResolution
 
     public void run(IMarker marker)
     {
-        // TODO Tie this in to the actual GUI
         insertInterface(marker);
         MessageDialog.openInformation(null, "QuickFix Demo",
             "This quick-fix is not yet implemented");

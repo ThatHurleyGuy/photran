@@ -17,9 +17,9 @@ package org.eclipse.photran.internal.ui.editor_vpg.lint;
 public class PhotranLint
 {
     // This attribute is used to set what the type of the problem is
-    public static final String PHOTRAN_LINT_ATTRIBUTE = "PhotranLintProblem";
+    public static final String PHOTRAN_LINT_ATTRIBUTE = "PhotranLintProblem"; //$NON-NLS-1$
 
-    public static final String PHOTRAN_LINT_EXTRA = "PhotranLintExtra";
+    public static final String PHOTRAN_LINT_EXTRA = "PhotranLintExtra"; //$NON-NLS-1$
 
     // This value should be set during the IMarker creation to correspond to the proper quick fix
     public static final int UNSAFE_CALL_VALUE = 0;
