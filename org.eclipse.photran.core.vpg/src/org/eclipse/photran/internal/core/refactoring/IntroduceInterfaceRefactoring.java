@@ -39,7 +39,7 @@ import org.eclipse.photran.internal.core.refactoring.infrastructure.FortranEdito
 import org.eclipse.photran.internal.core.reindenter.Reindenter;
 import org.eclipse.photran.internal.core.vpg.PhotranVPG;
 
-class IntroduceInterfaceRefactoring extends FortranEditorRefactoring
+public class IntroduceInterfaceRefactoring extends FortranEditorRefactoring
 {
     @Override
     public String getName()
@@ -83,7 +83,10 @@ class IntroduceInterfaceRefactoring extends FortranEditorRefactoring
         IASTNode enclNode = findEnclosingNode(this.astOfFileInEditor, this.selectedRegionInEditor);
 
         String callName = enclNode.findLastToken().getText();
-
+        System.out.println("Class: " + enclNode.getClass());
+        System.out.println(this.selectedRegionInEditor.getStartLine() + " at " + this.selectedRegionInEditor.getOffset());
+        System.out.println("Call name: " + callName);
+        
         String iface = null;
         ArrayList<Definition> defs = PhotranVPG.getInstance().findAllExternalSubprogramsNamed(callName);
         for (Definition def : defs) {
@@ -95,6 +98,7 @@ class IntroduceInterfaceRefactoring extends FortranEditorRefactoring
                 iface = generateSubroutineInterface(subroutine);
             }
         }
+        System.out.println(iface);
 
         IASTListNode<IBodyConstruct> intrNode = parseLiteralStatementSequence(iface);
 

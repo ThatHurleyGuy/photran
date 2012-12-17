@@ -41,6 +41,7 @@ import org.eclipse.photran.internal.core.parser.IASTListNode;
 import org.eclipse.photran.internal.core.parser.IBodyConstruct;
 import org.eclipse.photran.internal.core.parser.Parser;
 import org.eclipse.photran.internal.core.refactoring.CreateInterfaceRefactoring;
+import org.eclipse.photran.internal.core.refactoring.IntroduceInterfaceRefactoring;
 import org.eclipse.photran.internal.core.vpg.PhotranVPG;
 import org.eclipse.photran.internal.ui.editor_vpg.Messages;
 import org.eclipse.ui.IMarkerResolution;
@@ -67,7 +68,6 @@ public class TypeSafeCallQuickFixer implements IMarkerResolution
 
     public void run(IMarker marker)
     {
-        insertInterface(marker);
         callRefactoring(marker);
         MessageDialog.openInformation(null, "QuickFix Demo",
             "This quick-fix is not yet implemented");
@@ -75,7 +75,7 @@ public class TypeSafeCallQuickFixer implements IMarkerResolution
 
     public void callRefactoring(IMarker marker)
     {
-        CreateInterfaceRefactoring refactoring = new CreateInterfaceRefactoring();
+        IntroduceInterfaceRefactoring refactoring = new IntroduceInterfaceRefactoring();
         TextSelection selection = new TextSelection(marker.getAttribute(IMarker.CHAR_START, 0), marker.getAttribute(IMarker.CHAR_END, 0));
         refactoring.initialize((IFile)marker.getResource(), selection);
         RefactoringStatus status = refactoring.checkFinalConditions(new NullProgressMonitor());
