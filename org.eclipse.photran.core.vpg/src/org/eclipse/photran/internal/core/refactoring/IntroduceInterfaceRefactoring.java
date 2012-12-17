@@ -49,6 +49,8 @@ public class IntroduceInterfaceRefactoring extends FortranEditorRefactoring
         ensureProjectHasRefactoringEnabled(status);
 
         Token token = findEnclosingToken(this.astOfFileInEditor, this.selectedRegionInEditor);
+        System.out.println(this.selectedRegionInEditor.getStartLine() + " at "+ this.selectedRegionInEditor.getOffset());
+        System.out.println("Token null: " + (token == null));
         if (PhotranVPG.getInstance().findAllExternalSubprogramsNamed(token.getText()).isEmpty())
             fail("Select a call to an external subroutine or function.");
     }

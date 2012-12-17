@@ -10,19 +10,26 @@
  *******************************************************************************/
 package org.eclipse.photran.internal.ui.editor_vpg.lint;
 
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.io.StringReader;
 import java.util.ArrayList;
 import java.util.HashSet;
 
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IMarker;
+import org.eclipse.core.resources.IProject;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.NullProgressMonitor;
 import org.eclipse.core.runtime.OperationCanceledException;
 import org.eclipse.jface.dialogs.MessageDialog;
+import org.eclipse.jface.text.Document;
 import org.eclipse.jface.text.TextSelection;
 import org.eclipse.ltk.core.refactoring.Change;
 import org.eclipse.ltk.core.refactoring.RefactoringStatus;
+import org.eclipse.ltk.core.refactoring.RefactoringStatusEntry;
 import org.eclipse.photran.core.IFortranAST;
 import org.eclipse.photran.internal.core.FortranAST;
 import org.eclipse.photran.internal.core.analysis.binding.Definition;
@@ -43,7 +50,9 @@ import org.eclipse.photran.internal.core.parser.Parser;
 import org.eclipse.photran.internal.core.refactoring.CreateInterfaceRefactoring;
 import org.eclipse.photran.internal.core.refactoring.IntroduceInterfaceRefactoring;
 import org.eclipse.photran.internal.core.vpg.PhotranVPG;
+import org.eclipse.photran.internal.ui.editor.FortranEditor;
 import org.eclipse.photran.internal.ui.editor_vpg.Messages;
+import org.eclipse.rephraserengine.ui.UIUtil;
 import org.eclipse.ui.IMarkerResolution;
 
 /**
@@ -69,22 +78,46 @@ public class TypeSafeCallQuickFixer implements IMarkerResolution
     public void run(IMarker marker)
     {
         callRefactoring(marker);
-        MessageDialog.openInformation(null, "QuickFix Demo",
-            "This quick-fix is not yet implemented");
+    }
+
+    private String readStream(InputStream inputStream) throws IOException
+    {
+        StringBuffer sb = new StringBuffer(4096);
+        BufferedReader in = new BufferedReader(new InputStreamReader(inputStream));
+        for (int offset = 0, ch = in.read(); ch >= 0; ch = in.read())
+        {
+            sb.append((char)ch);
+            offset++;
+        }
+        in.close();
+        return sb.toString();
     }
 
     public void callRefactoring(IMarker marker)
     {
+
+        if (!UIUtil.askUserToSaveModifiedFiles()) return;
+
         IntroduceInterfaceRefactoring refactoring = new IntroduceInterfaceRefactoring();
-        TextSelection selection = new TextSelection(marker.getAttribute(IMarker.CHAR_START, 0), marker.getAttribute(IMarker.CHAR_END, 0));
+        TextSelection selection = new TextSelection(marker.getAttribute(IMarker.CHAR_START, 0), 0);
         refactoring.initialize((IFile)marker.getResource(), selection);
-        RefactoringStatus status = refactoring.checkFinalConditions(new NullProgressMonitor());
-        if ( !status.isOK()) {
-            //Tell the user
-            MessageDialog.openInformation(null, "Create Typesafe Interace",
-                "Something Went Wrong");
+        RefactoringStatus status = refactoring.checkInitialConditions(new NullProgressMonitor());
+        if (!status.isOK())
+        {
+            RefactoringStatusEntry[] entries = status.getEntries();
+            MessageDialog.openInformation(null, refactoring.getName(),
+                entries[entries.length - 1].getMessage());
+            return;
         }
-        refactoring.checkFinalConditions(new NullProgressMonitor());
+        status = refactoring.checkFinalConditions(new NullProgressMonitor());
+        if (!status.isOK())
+        {
+            RefactoringStatusEntry[] entries = status.getEntries();
+            MessageDialog.openInformation(null, refactoring.getName(),
+                entries[entries.length - 1].getMessage());
+            return;
+        }
+
         Change change;
         try
         {
@@ -100,195 +133,6 @@ public class TypeSafeCallQuickFixer implements IMarkerResolution
         {
             // TODO Auto-generated catch block
             e.printStackTrace();
-        }
-    }
-    
-    private void insertInterface(IMarker marker)
-    {
-        // text name of the call
-        String callName = marker.getAttribute(PhotranLint.PHOTRAN_LINT_EXTRA, ""); //$NON-NLS-1$
-
-        String iface = null;
-        ArrayList<Definition> defs = PhotranVPG.getInstance().findAllExternalSubprogramsNamed(
-            callName);
-        for (Definition def : defs)
-        {
-            ASTFunctionStmtNode function = def.getTokenRef().getASTNode()
-                .findNearestAncestor(ASTFunctionStmtNode.class);
-            if (function != null)
-            {
-                iface = generateFunctionInterface(function);
-            }
-            else
-            {
-                ASTSubroutineStmtNode subroutine = def.getTokenRef().getASTNode()
-                    .findNearestAncestor(ASTSubroutineStmtNode.class);
-                iface = generateSubroutineInterface(subroutine);
-            }
-        }
-
-        IASTListNode<IBodyConstruct> body = null;
-
-        try
-        {
-            /** @see FortranResourceRefactoring#parseLiteralStatementSequence */
-            StringBuilder prog = new StringBuilder();
-            prog.append("program p"); //$NON-NLS-1$
-            prog.append(EOL);
-            prog.append(iface);
-            prog.append(EOL);
-            prog.append("end program"); //$NON-NLS-1$
-            IAccumulatingLexer lexer = new ASTLexerFactory().createLexer(
-                new StringReader(prog.toString()), null, "(none)"); //$NON-NLS-1$
-            Parser parser = new Parser();
-            FortranAST ast = new FortranAST(null, parser.parse(lexer), lexer.getTokenList());
-            body = ((ASTMainProgramNode)ast.getRoot().getProgramUnitList().get(0)).getBody();
-        }
-        catch (Exception e)
-        {
-            throw new Error(e);
-        }
-
-        // get the ast associated with the file the marker is on
-        IFortranAST ast = PhotranVPG.getInstance().acquireTransientAST(
-            PhotranVPG.getFilenameForIResource(marker.getResource()));
-
-        // grab the scoping node and insert our interface there
-        ScopingNode node = ast.findFirstTokenOnLine(marker.getAttribute(IMarker.LINE_NUMBER, 0))
-            .getEnclosingScope();
-    }
-
-    private String generateFunctionInterface(ASTFunctionStmtNode function)
-    {
-        HashSet<String> neededDeclarations = new HashSet<String>();
-        ArrayList<String> parameters = new ArrayList<String>();
-        String result = null;
-
-        // if we have a result clause, we need the declaration of it in the
-        // interface
-        if (function.hasResultClause())
-        {
-            for (Definition def : function.getName().resolveBinding())
-            {
-                neededDeclarations.add(def.getCanonicalizedName());
-                result = " result(" + def.getCanonicalizedName() + ")"; //$NON-NLS-1$ //$NON-NLS-2$
-            }
-        }
-
-        // we also need the declaration of all function parameters
-        for (ASTFunctionParNode param : function.getFunctionPars())
-        {
-            for (Definition def : param.getVariableName().resolveBinding())
-            {
-                neededDeclarations.add(def.getCanonicalizedName());
-                parameters.add(def.getCanonicalizedName());
-            }
-        }
-
-        DeclarationVisitor visitor = new DeclarationVisitor(neededDeclarations);
-        function.getParent().accept(visitor);
-
-        StringBuilder builder = new StringBuilder();
-        builder.append("interface"); //$NON-NLS-1$
-        builder.append(EOL);
-
-        // begin the function and parameter list
-        builder.append("function "); //$NON-NLS-1$
-        builder.append(function.getFunctionName().getFunctionName().getText());
-        builder.append(makeParameterList(parameters));
-
-        if (function.hasResultClause()) builder.append(result);
-        builder.append(EOL);
-
-        builder.append(visitor.getDeclarations());
-        builder.append(EOL);
-        builder.append("end function"); //$NON-NLS-1$
-        builder.append(EOL);
-        builder.append("end interface"); //$NON-NLS-1$
-        return builder.toString();
-    }
-
-    private String generateSubroutineInterface(ASTSubroutineStmtNode subroutine)
-    {
-        HashSet<String> neededDeclarations = new HashSet<String>();
-        ArrayList<String> parameters = new ArrayList<String>();
-
-        // we also need the declaration of all function parameters
-        for (ASTSubroutineParNode param : subroutine.getSubroutinePars())
-        {
-            for (Definition def : param.getVariableName().resolveBinding())
-            {
-                neededDeclarations.add(def.getCanonicalizedName());
-                parameters.add(def.getCanonicalizedName());
-            }
-        }
-
-        DeclarationVisitor visitor = new DeclarationVisitor(neededDeclarations);
-        subroutine.getParent().accept(visitor);
-
-        StringBuilder builder = new StringBuilder();
-        builder.append("interface"); //$NON-NLS-1$
-        builder.append(EOL);
-
-        // begin the subroutine and parameter list
-        builder.append("subroutine  "); //$NON-NLS-1$
-        builder.append(subroutine.getSubroutineName().getSubroutineName().getText());
-        builder.append(makeParameterList(parameters));
-        builder.append(EOL);
-
-        builder.append(visitor.getDeclarations());
-        builder.append(EOL);
-        builder.append("end subroutine"); //$NON-NLS-1$
-        builder.append(EOL);
-        builder.append("end interface"); //$NON-NLS-1$
-        return builder.toString();
-    }
-
-    private String makeParameterList(ArrayList<String> parameters)
-    {
-        StringBuilder builder = new StringBuilder();
-        builder.append("("); //$NON-NLS-1$
-        for (int i = 0; i < parameters.size(); ++i)
-        {
-            if (i > 0) builder.append(","); //$NON-NLS-1$
-            builder.append(parameters.get(i));
-        }
-        builder.append(")"); //$NON-NLS-1$
-        return builder.toString();
-    }
-
-    private class DeclarationVisitor extends ASTVisitor
-    {
-        private HashSet<String> vars;
-
-        private StringBuilder declarations;
-
-        public DeclarationVisitor(HashSet<String> vars)
-        {
-            this.vars = vars;
-            this.declarations = new StringBuilder();
-        }
-
-        public String getDeclarations()
-        {
-            return declarations.toString();
-        }
-
-        @Override
-        public void visitASTTypeDeclarationStmtNode(ASTTypeDeclarationStmtNode node)
-        {
-            super.visitASTTypeDeclarationStmtNode(node);
-            for (ASTEntityDeclNode entityDecl : node.getEntityDeclList())
-            {
-                for (Definition def : entityDecl.getObjectName().getObjectName().resolveBinding())
-                {
-                    if (vars.contains(def.getCanonicalizedName()))
-                    {
-                        declarations.append(node.toString());
-                        return;
-                    }
-                }
-            }
         }
     }
 }
