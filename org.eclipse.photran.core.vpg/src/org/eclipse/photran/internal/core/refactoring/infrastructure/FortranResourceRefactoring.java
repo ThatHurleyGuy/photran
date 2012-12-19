@@ -438,7 +438,7 @@ public abstract class FortranResourceRefactoring
         return false;
     }
 
-    protected static Token findFirstTokenAfter(IFortranAST ast, final int targetFileOffset)
+    private static Token findFirstTokenAfter(IFortranAST ast, final int targetFileOffset)
     {
         for (Token token : new IterableWrapper<Token>(ast))
             if (token.isOnOrAfterFileOffset(targetFileOffset))
