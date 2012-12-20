@@ -1,8 +1,8 @@
 !Taken from an email forwarded from Jeff Overbey
-PROGRAM Example !<<<<< 13,1,19,17,pass
+PROGRAM Example
 IMPLICIT NONE
 INTEGER(KIND=4) :: n = 10
-CALL S(n)
+CALL S(n)!<<<<< 5,6,pass
 END PROGRAM Example
 
 MODULE A; IMPLICIT NONE; INTEGER, PARAMETER :: INT_KIND = 4; END MODULE A

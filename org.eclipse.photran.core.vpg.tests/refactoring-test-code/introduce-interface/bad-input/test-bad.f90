@@ -1,5 +1,5 @@
 !taken from http://www.stanford.edu/class/me200c/tutorial_90/09_modules.html
-PROGRAM Area !<<<<< 16,1,24,28,fail-final
+PROGRAM Area !<<<<< 2,11,fail-initial
 
 IMPLICIT NONE
 

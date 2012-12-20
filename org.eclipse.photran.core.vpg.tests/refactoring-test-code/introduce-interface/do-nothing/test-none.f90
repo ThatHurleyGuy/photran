@@ -1,4 +1,4 @@
-PROGRAM testEmpty !<<<<< 16,1,20,26,pass
+PROGRAM testEmpty
 IMPLICIT NONE
 
 REAL :: x, y
@@ -6,7 +6,7 @@ REAL :: x, y
 x = 1
 y = 2
 
-CALL Do_Nothing()
+CALL Do_Nothing() !<<<<< 9,9,pass
 
 a = x + y
 
