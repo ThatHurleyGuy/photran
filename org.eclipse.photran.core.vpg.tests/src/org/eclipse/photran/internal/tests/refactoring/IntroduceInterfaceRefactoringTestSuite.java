@@ -13,7 +13,7 @@ package org.eclipse.photran.internal.tests.refactoring;
 import junit.framework.Test;
 
 import org.eclipse.core.resources.IFile;
-import org.eclipse.photran.internal.core.refactoring.CreateInterfaceRefactoring;
+import org.eclipse.photran.internal.core.refactoring.IntroduceInterfaceRefactoring;
 import org.eclipse.photran.internal.tests.Activator;
 import org.eclipse.photran.internal.tests.PhotranRefactoringTestSuiteFromMarkers;
 
@@ -21,26 +21,26 @@ import org.eclipse.photran.internal.tests.PhotranRefactoringTestSuiteFromMarkers
  * Test suite for moving interface refactoring
  * @author Dennis Lin
  */
-public class CreateInterfaceRefactoringTestSuite extends PhotranRefactoringTestSuiteFromMarkers<CreateInterfaceRefactoring>
+public class IntroduceInterfaceRefactoringTestSuite extends
+    PhotranRefactoringTestSuiteFromMarkers<IntroduceInterfaceRefactoring>
 {
-    private static final String DIR = "refactoring-test-code/create-interface";
+    private static final String DIR = "refactoring-test-code/introduce-interface";
+
     public static Test suite() throws Exception
     {
-        return new CreateInterfaceRefactoringTestSuite();
+        return new IntroduceInterfaceRefactoringTestSuite();
     }
 
-    public CreateInterfaceRefactoringTestSuite() throws Exception
+    public IntroduceInterfaceRefactoringTestSuite() throws Exception
     {
-        super(Activator.getDefault(),
-            "Running Move Interface refactoring in",
-            DIR,
-            CreateInterfaceRefactoring.class);
+        super(Activator.getDefault(), "Running Move Interface refactoring in", DIR,
+            IntroduceInterfaceRefactoring.class);
     }
 
-    @Override protected boolean shouldCompile(IFile fileContainingMarker)
+    @Override
+    protected boolean shouldCompile(IFile fileContainingMarker)
     {
         String name = fileContainingMarker.getName();
-        return
-            !name.equalsIgnoreCase("test-fail.f90");
+        return !name.equalsIgnoreCase("test-fail.f90");
     }
 }

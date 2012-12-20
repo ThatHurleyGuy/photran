@@ -1,12 +1,12 @@
 /*******************************************************************************
- * Copyright (c) 2012 TODO COMPANY NAME and others.
+ * Copyright (c) 2012 UIUC and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
  * http://www.eclipse.org/legal/epl-v10.html
  *
  * Contributors:
- *    seanhurley (TODO COMPANY NAME) - Initial API and implementation
+ *    Sean Hurley (UIUC) - Initial API and implementation
  *******************************************************************************/
 package org.eclipse.photran.internal.ui.editor_vpg.lint;
 
@@ -16,8 +16,7 @@ import org.eclipse.ui.IMarkerResolution;
 import org.eclipse.ui.IMarkerResolutionGenerator;
 
 /**
- * 
- * @author seanhurley
+ * This will be called when the eclipse API needs to get possible quick fixes for a particular issue
  */
 public class PhotranQuickFixer implements IMarkerResolutionGenerator
 {
@@ -30,14 +29,15 @@ public class PhotranQuickFixer implements IMarkerResolutionGenerator
         }
         catch (CoreException e)
         {
-            // TODO Auto-generated catch block
             e.printStackTrace();
         }
 
+        // To add a new possible solution, just create the marker with a different attribute and add
+        // it to the switch cases
         switch (problem)
         {
             case PhotranLint.UNSAFE_CALL_VALUE:
-                return new IMarkerResolution[] { new TypeSafeCallQuickFixer(mk), };
+                return new IMarkerResolution[] { new TypesafeCallQuickFixer(mk), };
 
             default:
                 break;

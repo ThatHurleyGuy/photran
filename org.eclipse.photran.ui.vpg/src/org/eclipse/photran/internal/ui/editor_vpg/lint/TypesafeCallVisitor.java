@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2012 TODO COMPANY NAME and others.
+ * Copyright (c) 2012 UIUC and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -13,30 +13,20 @@ package org.eclipse.photran.internal.ui.editor_vpg.lint;
 
 import java.util.ArrayList;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
 
 import org.eclipse.core.resources.IFile;
 import org.eclipse.photran.core.IFortranAST;
 import org.eclipse.photran.internal.core.analysis.binding.Definition;
 import org.eclipse.photran.internal.core.analysis.binding.Intrinsic;
-import org.eclipse.photran.internal.core.analysis.binding.ScopingNode;
-import org.eclipse.photran.internal.core.lexer.Terminal;
 import org.eclipse.photran.internal.core.lexer.Token;
 import org.eclipse.photran.internal.core.parser.ASTCallStmtNode;
-import org.eclipse.photran.internal.core.parser.ASTFunctionParNode;
-import org.eclipse.photran.internal.core.parser.ASTFunctionStmtNode;
-import org.eclipse.photran.internal.core.parser.ASTFunctionSubprogramNode;
 import org.eclipse.photran.internal.core.parser.ASTInterfaceBodyNode;
 import org.eclipse.photran.internal.core.parser.ASTInterfaceStmtNode;
-import org.eclipse.photran.internal.core.parser.ASTSubroutineParNode;
-import org.eclipse.photran.internal.core.parser.ASTSubroutineStmtNode;
-import org.eclipse.photran.internal.core.parser.ASTSubroutineSubprogramNode;
 import org.eclipse.photran.internal.core.parser.ASTUseStmtNode;
 import org.eclipse.photran.internal.core.parser.ASTVarOrFnRefNode;
 import org.eclipse.photran.internal.core.parser.ASTVisitor;
 import org.eclipse.photran.internal.core.parser.IASTNode;
-import org.eclipse.photran.internal.core.vpg.PhotranTokenRef;
 import org.eclipse.photran.internal.core.vpg.PhotranVPG;
 
 /**
@@ -51,6 +41,8 @@ public class TypesafeCallVisitor extends ASTVisitor
     private HashSet<String> interfaceNodes;
 
     /**
+     * A way to statically get a list of unsafe calls from the IASTNode
+     * 
      * @param node The IASTNode that should be searched for unsafe calls
      * @return An ArrayList of all of the unsafe calls within this node
      */
@@ -68,9 +60,12 @@ public class TypesafeCallVisitor extends ASTVisitor
     }
 
     /**
+     * Will calculate the difference between the list of found interfaces and the actual
+     * functions/subroutines
+     * 
      * @return An ArrayList of all of the unsafe calls within this node
      */
-    public ArrayList<Token> getCallDifference()
+    private ArrayList<Token> getCallDifference()
     {
         ArrayList<Token> unInterfacedCalls = new ArrayList<Token>();
         for (Token node : callNodes)
@@ -79,13 +74,7 @@ public class TypesafeCallVisitor extends ASTVisitor
             String subroutineName = PhotranVPG.canonicalizeIdentifier(node.getText());
             if (!interfaceNodes.contains(subroutineName))
             {
-                System.out.println("Found external call without a matching interface: "
-                    + subroutineName);
                 unInterfacedCalls.add(node);
-            }
-            else
-            {
-                System.out.println("Found matching external call: " + subroutineName);
             }
         }
 
@@ -99,20 +88,16 @@ public class TypesafeCallVisitor extends ASTVisitor
         Definition test = Intrinsic.resolve(node.getSubroutineName());
         if (test == null)
         {
-            System.out.println("Found none-intrinsic call node: "
-                + node.getSubroutineName().toString());
             callNodes.add(node.getSubroutineName());
-        }
-        else
-        {
-            System.out.println("Found Intrinsic call node. Ignoring,");
         }
     }
 
     @Override
-    public void visitASTInterfaceStmtNode(ASTInterfaceStmtNode node) {
+    public void visitASTInterfaceStmtNode(ASTInterfaceStmtNode node)
+    {
         super.visitASTInterfaceStmtNode(node);
-        handleASTInterfaceStmtNode(node); }
+        handleASTInterfaceStmtNode(node);
+    }
 
     @Override
     public void visitASTInterfaceBodyNode(ASTInterfaceBodyNode node)
@@ -125,7 +110,6 @@ public class TypesafeCallVisitor extends ASTVisitor
     public void visitASTUseStmtNode(ASTUseStmtNode node)
     {
         super.visitASTUseStmtNode(node);
-        System.out.println(node.getName());
 
         ArrayList<Definition> definitions = PhotranVPG.getInstance().findAllModulesNamed(
             node.getName().getText());
@@ -134,40 +118,46 @@ public class TypesafeCallVisitor extends ASTVisitor
         IFortranAST ast = PhotranVPG.getInstance().acquireTransientAST(file);
         InterfaceFinder finder = new InterfaceFinder(this);
         ast.accept(finder);
-    }       
+    }
 
+    @SuppressWarnings("unused")
     @Override
-    public void visitASTVarOrFnRefNode(ASTVarOrFnRefNode node) {
+    public void visitASTVarOrFnRefNode(ASTVarOrFnRefNode node)
+    {
         super.visitASTVarOrFnRefNode(node);
-        for(Definition def : PhotranVPG.getInstance().findAllExternalSubprogramsNamed(PhotranVPG.canonicalizeIdentifier(node.getName().toString()))) {
+        for (Definition def : PhotranVPG.getInstance().findAllExternalSubprogramsNamed(
+            PhotranVPG.canonicalizeIdentifier(node.getName().toString())))
+        {
             // a) must be a function and b) it is external
-            System.out.println("found external function call: " + PhotranVPG.canonicalizeIdentifier(node.getName().getName().getText()));
             callNodes.add(node.getName().getName());
         }
     }
 
-    private void handleASTInterfaceStmtNode(ASTInterfaceStmtNode node) 
+    private void handleASTInterfaceStmtNode(ASTInterfaceStmtNode node)
     {
         // if the interface has a name that it may be called by, add it
         // to the list of safe call names
-        if(node.getGenericName() != null)
+        if (node.getGenericName() != null)
             interfaceNodes.add(PhotranVPG.canonicalizeIdentifier(node.getGenericName().toString()));
     }
 
     private void handleASTInterfaceBodyNode(ASTInterfaceBodyNode node)
     {
-        if(node.getSubroutineStmt() != null)
+        if (node.getSubroutineStmt() != null)
             interfaceNodes.add(PhotranVPG.canonicalizeIdentifier(node.getSubroutineStmt()
-                        .getSubroutineName().toString()));
-        if(node.getFunctionStmt() != null)
-            interfaceNodes.add(PhotranVPG.canonicalizeIdentifier(node.getFunctionStmt().getFunctionName().toString()));
+                .getSubroutineName().toString()));
+        if (node.getFunctionStmt() != null)
+            interfaceNodes.add(PhotranVPG.canonicalizeIdentifier(node.getFunctionStmt()
+                .getFunctionName().toString()));
     }
 
     /**
      * 
      * @author seanhurley
      * 
-     *         Used to find all of the interfaces declared in an AST
+     *         Used to find all of the interfaces declared in an AST. This will generally be called
+     *         on when we see a "USE" statement in the code and we only care about the interfaces
+     *         within its module
      */
     private class InterfaceFinder extends ASTVisitor
     {

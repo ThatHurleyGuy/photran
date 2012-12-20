@@ -13,9 +13,7 @@ package org.eclipse.photran.internal.ui.editor_vpg;
 import org.eclipse.cdt.internal.ui.text.CCompositeReconcilingStrategy;
 import org.eclipse.jface.text.IRegion;
 import org.eclipse.jface.text.source.ISourceViewer;
-import org.eclipse.photran.internal.core.vpg.PhotranVPG;
 import org.eclipse.photran.internal.ui.editor.FortranEditor;
-import org.eclipse.photran.internal.ui.editor_vpg.lint.TypesafeCallChecker;
 import org.eclipse.ui.texteditor.ITextEditor;
 
 /**
@@ -27,8 +25,9 @@ import org.eclipse.ui.texteditor.ITextEditor;
 public class FortranVPGReconcilingStrategy extends CCompositeReconcilingStrategy
 {
     protected final FortranEditor editor;
-    
-    public FortranVPGReconcilingStrategy(ISourceViewer sourceViewer, ITextEditor editor, String documentPartitioning)
+
+    public FortranVPGReconcilingStrategy(ISourceViewer sourceViewer, ITextEditor editor,
+        String documentPartitioning)
     {
         super(sourceViewer, editor, documentPartitioning);
         if (editor instanceof FortranEditor)
@@ -41,13 +40,15 @@ public class FortranVPGReconcilingStrategy extends CCompositeReconcilingStrategy
         }
     }
 
-    @Override public void initialReconcile()
+    @Override
+    public void initialReconcile()
     {
         super.initialReconcile();
         FortranEditorTasks.instance(editor).getRunner().runTasks();
     }
 
-    @Override public void reconcile(IRegion region)
+    @Override
+    public void reconcile(IRegion region)
     {
         super.reconcile(region);
         FortranEditorTasks.instance(editor).getRunner().runTasks();

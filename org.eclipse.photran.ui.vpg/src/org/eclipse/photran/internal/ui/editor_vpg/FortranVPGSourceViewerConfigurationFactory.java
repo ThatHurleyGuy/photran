@@ -32,40 +32,39 @@ import org.eclipse.photran.internal.ui.editor_vpg.lint.TypesafeCallChecker;
  * @author Jeff Overbey
  */
 @SuppressWarnings("restriction")
-public class FortranVPGSourceViewerConfigurationFactory implements IFortranSourceViewerConfigurationFactory
+public class FortranVPGSourceViewerConfigurationFactory implements
+    IFortranSourceViewerConfigurationFactory
 {
     public SourceViewerConfiguration create(final FortranEditor editor)
     {
         new FortranFoldingProvider().setup(editor);
         new TypesafeCallChecker().setup(editor);
-        
+
         return new FortranSourceViewerConfiguration(editor)
         {
             private final FortranCompletionProcessor fortranCompletionProcessor = new FortranCompletionProcessor();
-            
-            @Override protected CCompositeReconcilingStrategy createReconcilingStrategy(ISourceViewer sourceViewer)
+
+            @Override
+            protected CCompositeReconcilingStrategy createReconcilingStrategy(
+                ISourceViewer sourceViewer)
             {
-                return new FortranVPGReconcilingStrategy(sourceViewer, editor, getConfiguredDocumentPartitioning(sourceViewer));
+                return new FortranVPGReconcilingStrategy(sourceViewer, editor,
+                    getConfiguredDocumentPartitioning(sourceViewer));
             }
 
-            @Override public IContentAssistant getContentAssistant(ISourceViewer sourceViewer)
+            @Override
+            public IContentAssistant getContentAssistant(ISourceViewer sourceViewer)
             {
                 IContentAssistant result = fortranCompletionProcessor.setup((FortranEditor)editor);
                 return result == null ? super.getContentAssistant(sourceViewer) : result;
             }
 
-            @Override public ITextHover getTextHover(ISourceViewer sourceViewer, String contentType)
+            @Override
+            public ITextHover getTextHover(ISourceViewer sourceViewer, String contentType)
             {
                 return new FortranDeclarationHover(sourceViewer, (FortranEditor)editor);
             }
-            
-            /*
-             * (non-Javadoc)
-             * 
-             * @see
-             * org.eclipse.jface.text.source.SourceViewerConfiguration#getAnnotationHover(org.eclipse
-             * .jface.text.source.ISourceViewer)
-             */
+
             @Override
             public IAnnotationHover getAnnotationHover(ISourceViewer sourceViewer)
             {

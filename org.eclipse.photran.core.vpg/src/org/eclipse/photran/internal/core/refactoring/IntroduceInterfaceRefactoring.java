@@ -38,10 +38,9 @@ public class IntroduceInterfaceRefactoring extends FortranEditorRefactoring
     @Override
     public String getName()
     {
-        return "Introduce Interface Refactoring";
+        return Messages.CreateInterfaceRefactoring_Name;
     }
 
-    @SuppressWarnings("unused")
     @Override
     protected void doCheckInitialConditions(RefactoringStatus status, IProgressMonitor pm)
         throws PreconditionFailure
@@ -49,10 +48,8 @@ public class IntroduceInterfaceRefactoring extends FortranEditorRefactoring
         ensureProjectHasRefactoringEnabled(status);
 
         Token token = findEnclosingToken(this.astOfFileInEditor, this.selectedRegionInEditor);
-        System.out.println(this.selectedRegionInEditor.getStartLine() + " at "+ this.selectedRegionInEditor.getOffset());
-        System.out.println("Token null: " + (token == null));
         if (PhotranVPG.getInstance().findAllExternalSubprogramsNamed(token.getText()).isEmpty())
-            fail("Select a call to an external subroutine or function.");
+            fail(Messages.CreateInterfaceRefactoring_SelectAnInterace);
     }
 
     @Override
@@ -78,15 +75,22 @@ public class IntroduceInterfaceRefactoring extends FortranEditorRefactoring
     {
         Token token = findEnclosingToken(this.astOfFileInEditor, this.selectedRegionInEditor);
         String callName = token.getText();
-        
+
         String iface = null;
-        ArrayList<Definition> defs = PhotranVPG.getInstance().findAllExternalSubprogramsNamed(callName);
-        for (Definition def : defs) {
-            ASTFunctionStmtNode function = def.getTokenRef().getASTNode().findNearestAncestor(ASTFunctionStmtNode.class);
-            if (function != null) {
+        ArrayList<Definition> defs = PhotranVPG.getInstance().findAllExternalSubprogramsNamed(
+            callName);
+        for (Definition def : defs)
+        {
+            ASTFunctionStmtNode function = def.getTokenRef().getASTNode()
+                .findNearestAncestor(ASTFunctionStmtNode.class);
+            if (function != null)
+            {
                 iface = generateFunctionInterface(function);
-            } else {
-                ASTSubroutineStmtNode subroutine = def.getTokenRef().getASTNode().findNearestAncestor(ASTSubroutineStmtNode.class);
+            }
+            else
+            {
+                ASTSubroutineStmtNode subroutine = def.getTokenRef().getASTNode()
+                    .findNearestAncestor(ASTSubroutineStmtNode.class);
                 iface = generateSubroutineInterface(subroutine);
             }
         }
@@ -95,9 +99,11 @@ public class IntroduceInterfaceRefactoring extends FortranEditorRefactoring
         IASTListNode<IBodyConstruct> intrNode = parseLiteralStatementSequence(iface);
 
         @SuppressWarnings("unchecked")
-        IASTListNode<IASTNode> body = (IASTListNode<IASTNode>)token.getEnclosingScope().getOrCreateBody();
+        IASTListNode<IASTNode> body = (IASTListNode<IASTNode>)token.getEnclosingScope()
+            .getOrCreateBody();
         body.addAll(findIndexToInsertStatement(body), intrNode);
-        Reindenter.reindent(intrNode, this.astOfFileInEditor, Reindenter.Strategy.REINDENT_EACH_LINE);
+        Reindenter.reindent(intrNode, this.astOfFileInEditor,
+            Reindenter.Strategy.REINDENT_EACH_LINE);
     }
 
     private String generateFunctionInterface(ASTFunctionStmtNode function)
@@ -108,16 +114,20 @@ public class IntroduceInterfaceRefactoring extends FortranEditorRefactoring
 
         // if we have a result clause, we need the declaration of it in the
         // interface
-        if (function.hasResultClause()) {
-            for (Definition def : function.getName().resolveBinding()) {
+        if (function.hasResultClause())
+        {
+            for (Definition def : function.getName().resolveBinding())
+            {
                 neededDeclarations.add(def.getCanonicalizedName());
                 result = " result(" + def.getCanonicalizedName() + ")"; //$NON-NLS-1$ //$NON-NLS-2$
             }
         }
 
         // we also need the declaration of all function parameters
-        for (ASTFunctionParNode param : function.getFunctionPars()) {
-            for (Definition def : param.getVariableName().resolveBinding()) {
+        for (ASTFunctionParNode param : function.getFunctionPars())
+        {
+            for (Definition def : param.getVariableName().resolveBinding())
+            {
                 neededDeclarations.add(def.getCanonicalizedName());
                 parameters.add(def.getCanonicalizedName());
             }
@@ -134,9 +144,8 @@ public class IntroduceInterfaceRefactoring extends FortranEditorRefactoring
         builder.append("function "); //$NON-NLS-1$
         builder.append(function.getFunctionName().getFunctionName().getText());
         builder.append(makeParameterList(parameters));
-        
-        if (function.hasResultClause())
-            builder.append(result);
+
+        if (function.hasResultClause()) builder.append(result);
         builder.append(EOL);
 
         builder.append(visitor.getDeclarations());
@@ -153,8 +162,10 @@ public class IntroduceInterfaceRefactoring extends FortranEditorRefactoring
         ArrayList<String> parameters = new ArrayList<String>();
 
         // we also need the declaration of all function parameters
-        for (ASTSubroutineParNode param : subroutine.getSubroutinePars()) {
-            for (Definition def : param.getVariableName().resolveBinding()) {
+        for (ASTSubroutineParNode param : subroutine.getSubroutinePars())
+        {
+            for (Definition def : param.getVariableName().resolveBinding())
+            {
                 neededDeclarations.add(def.getCanonicalizedName());
                 parameters.add(def.getCanonicalizedName());
             }
@@ -185,7 +196,8 @@ public class IntroduceInterfaceRefactoring extends FortranEditorRefactoring
     {
         StringBuilder builder = new StringBuilder();
         builder.append("("); //$NON-NLS-1$
-        for (int i = 0; i < parameters.size(); ++i ) {
+        for (int i = 0; i < parameters.size(); ++i)
+        {
             if (i > 0) builder.append(","); //$NON-NLS-1$
             builder.append(parameters.get(i));
         }
@@ -193,16 +205,20 @@ public class IntroduceInterfaceRefactoring extends FortranEditorRefactoring
         return builder.toString();
     }
 
-    private class DeclarationVisitor extends ASTVisitor {
+    private class DeclarationVisitor extends ASTVisitor
+    {
         private HashSet<String> vars;
+
         private StringBuilder declarations;
 
-        public DeclarationVisitor(HashSet<String> vars) {
+        public DeclarationVisitor(HashSet<String> vars)
+        {
             this.vars = vars;
             this.declarations = new StringBuilder();
         }
 
-        public String getDeclarations() {
+        public String getDeclarations()
+        {
             return declarations.toString();
         }
 
@@ -210,9 +226,12 @@ public class IntroduceInterfaceRefactoring extends FortranEditorRefactoring
         public void visitASTTypeDeclarationStmtNode(ASTTypeDeclarationStmtNode node)
         {
             super.visitASTTypeDeclarationStmtNode(node);
-            for (ASTEntityDeclNode entityDecl : node.getEntityDeclList()) {
-                for (Definition def : entityDecl.getObjectName().getObjectName().resolveBinding()) {
-                    if (vars.contains(def.getCanonicalizedName())) {
+            for (ASTEntityDeclNode entityDecl : node.getEntityDeclList())
+            {
+                for (Definition def : entityDecl.getObjectName().getObjectName().resolveBinding())
+                {
+                    if (vars.contains(def.getCanonicalizedName()))
+                    {
                         declarations.append(node.toString());
                         return;
                     }

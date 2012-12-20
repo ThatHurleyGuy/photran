@@ -84,7 +84,7 @@ public class Messages extends NLS
     public static String ChangeToVectorNotation_PleaseSelectDoLoopNode;
 
     public static String ChangeToVectorNotation_PleaseSelectNewStyleDoLoopNode;
-    
+
     public static String ChangeToVectorNotation_CanNotBeChanged;
 
     public static String ChangeToVectorNotation_CanNotBeChangedToVectorNotation;
@@ -122,6 +122,7 @@ public class Messages extends NLS
     public static String EncapsulateVariableRefactoring_WarningFunctionArgument;
 
     public static String EncapsulateVariableRefactoring_WarningWillNotChangeReference;
+
     public static String ExtractProcedureRefactoring_PleaseSelectContiguousStatements;
 
     public static String ExtractProcedureRefactoring_CanOnlyExtractFromSubprogramOrMainProgram;
@@ -247,6 +248,7 @@ public class Messages extends NLS
     public static String CommonVarNamesRefactoring_SelectCommonBlockName;
 
     public static String CommonVarNamesRefactoring_VariableTypesDiffer;
+
     public static String DataToParameterRefactoring_AmbiguouslyDefined;
 
     public static String DataToParameterRefactoring_ArraysNotSupported;
@@ -264,6 +266,7 @@ public class Messages extends NLS
     public static String DataToParameterRefactoring_RefactorNotConsideringVarAssignment;
 
     public static String DataToParameterRefactoring_SelectedFileCannotBeParsed;
+
     public static String ExtractLocalVariableRefactoring_DeclarationDoesNotDeclareSingleVar;
 
     public static String ExtractLocalVariableRefactoring_DeclarationMustNotContainInitialization;
@@ -499,8 +502,10 @@ public class Messages extends NLS
     public static String VariableCaseRefactoring_Name;
 
     public static String VariableCaseRefactoring_SelectedFileCannotBeParsed;
-    
+
     public static String CreateInterfaceRefactoring_Name;
+
+    public static String CreateInterfaceRefactoring_SelectAnInterace;
 
     static
     {

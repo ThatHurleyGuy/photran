@@ -1,20 +1,20 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <?eclipse version="3.2"?>
 <plugin>
-   <!--==============-->
-   <!-- Refactorings -->
-   <!--==============-->
 
-   <!-- NOTE: When adding refactorings, please notify
-        Mariano Mendez so he can update www.fortranrefactoring.com.ar -->
-        
+
+   <!--==============-->
+   <!-- Lint Features -->
+   <!-- The extension points tie into the eclipse architecture to add the --> 
+   <!-- IMarkers, Annotations, and QuickFixes required for lint-like functionality -->
+   <!--==============-->
 	<extension point="org.eclipse.ui.ide.markerResolution">
 		<markerResolutionGenerator
-			markerType="org.eclipse.photran.internal.uic.editor_vpg.lint.marker"
+			markerType="org.eclipse.photran.internal.uiuc.editor_vpg.lint.marker"
 			class="org.eclipse.photran.internal.ui.editor_vpg.lint.PhotranQuickFixer"/>
 	</extension>
    
-	<extension point="org.eclipse.core.resources.markers" id="org.eclipse.photran.internal.uic.editor_vpg.lint.marker"
+	<extension point="org.eclipse.core.resources.markers" id="org.eclipse.photran.internal.uiuc.editor_vpg.lint.marker"
 	  name="My Marker">
 		<super type="org.eclipse.core.resources.problemmarker"/>
 		<persistent value="false"/>
@@ -25,7 +25,7 @@
 		<type markerSeverity="0"
 			super="org.eclipse.ui.workbench.texteditor.info"
 			name="com.ibm.example.myannotation"
-			markerType="org.eclipse.photran.internal.uic.editor_vpg.lint.marker"/>
+			markerType="org.eclipse.photran.internal.uiuc.editor_vpg.lint.marker"/>
 	</extension>
 
 	<extension point="org.eclipse.ui.editors.markerAnnotationSpecification"
@@ -44,8 +44,13 @@
 				textStylePreferenceValue="BOX">
 		</specification>
 	</extension>
-   
 
+   <!--==============-->
+   <!-- Refactorings -->
+   <!--==============-->
+
+   <!-- NOTE: When adding refactorings, please notify
+        Mariano Mendez so he can update www.fortranrefactoring.com.ar -->
    <extension
          point="org.eclipse.rephraserengine.ui.refactoring.refactorings">
       <resourceFilter class="org.eclipse.photran.internal.ui.vpg.PhotranResourceFilter" />
