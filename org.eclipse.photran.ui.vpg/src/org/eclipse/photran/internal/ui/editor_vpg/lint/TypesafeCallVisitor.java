@@ -21,8 +21,10 @@ import org.eclipse.photran.internal.core.analysis.binding.Definition;
 import org.eclipse.photran.internal.core.analysis.binding.Intrinsic;
 import org.eclipse.photran.internal.core.lexer.Token;
 import org.eclipse.photran.internal.core.parser.ASTCallStmtNode;
+import org.eclipse.photran.internal.core.parser.ASTFunctionStmtNode;
 import org.eclipse.photran.internal.core.parser.ASTInterfaceBodyNode;
 import org.eclipse.photran.internal.core.parser.ASTInterfaceStmtNode;
+import org.eclipse.photran.internal.core.parser.ASTSubroutineStmtNode;
 import org.eclipse.photran.internal.core.parser.ASTUseStmtNode;
 import org.eclipse.photran.internal.core.parser.ASTVarOrFnRefNode;
 import org.eclipse.photran.internal.core.parser.ASTVisitor;
@@ -116,7 +118,7 @@ public class TypesafeCallVisitor extends ASTVisitor
         Definition definition = definitions.get(0);
         IFile file = definition.getTokenRef().getFile();
         IFortranAST ast = PhotranVPG.getInstance().acquireTransientAST(file);
-        InterfaceFinder finder = new InterfaceFinder(this);
+        InterfaceSubroutineFinder finder = new InterfaceSubroutineFinder(this);
         ast.accept(finder);
     }
 
@@ -151,6 +153,18 @@ public class TypesafeCallVisitor extends ASTVisitor
                 .getFunctionName().toString()));
     }
 
+    private void handleASTSubroutineSTMTNode(ASTSubroutineStmtNode node)
+    {
+        interfaceNodes.add(PhotranVPG.canonicalizeIdentifier(node.getSubroutineName()
+            .getSubroutineName().getText()));
+    }
+
+    private void handleASTFunctionSTMTNode(ASTFunctionStmtNode node)
+    {
+        interfaceNodes.add(PhotranVPG.canonicalizeIdentifier(node.getFunctionName()
+            .getFunctionName().getText()));
+    }
+
     /**
      * 
      * @author seanhurley
@@ -159,24 +173,40 @@ public class TypesafeCallVisitor extends ASTVisitor
      *         on when we see a "USE" statement in the code and we only care about the interfaces
      *         within its module
      */
-    private class InterfaceFinder extends ASTVisitor
+    private class InterfaceSubroutineFinder extends ASTVisitor
     {
         private TypesafeCallVisitor visitor;
 
-        public InterfaceFinder(TypesafeCallVisitor visitor)
+        public InterfaceSubroutineFinder(TypesafeCallVisitor visitor)
         {
             this.visitor = visitor;
         }
 
         @Override
+        public void visitASTFunctionStmtNode(ASTFunctionStmtNode node)
+        {
+            super.visitASTFunctionStmtNode(node);
+            visitor.handleASTFunctionSTMTNode(node);
+        }
+
+        @Override
+        public void visitASTSubroutineStmtNode(ASTSubroutineStmtNode node)
+        {
+            super.visitASTSubroutineStmtNode(node);
+            visitor.handleASTSubroutineSTMTNode(node);
+        }
+
+        @Override
         public void visitASTInterfaceStmtNode(ASTInterfaceStmtNode node)
         {
+            super.visitASTInterfaceStmtNode(node);
             visitor.handleASTInterfaceStmtNode(node);
         }
 
         @Override
         public void visitASTInterfaceBodyNode(ASTInterfaceBodyNode node)
         {
+            super.visitASTInterfaceBodyNode(node);
             visitor.handleASTInterfaceBodyNode(node);
         }
     }

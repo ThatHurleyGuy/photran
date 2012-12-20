@@ -1,23 +1,22 @@
 !taken from http://www.stanford.edu/class/me200c/tutorial_90/09_modules.html
-PROGRAM Area !<<<<< 14,1,24,28,pass
+PROGRAM Area
 
 IMPLICIT NONE
 
-	INTERFACE
-		SUBROUTINE Compute_Area(r, Area)
-	   		REAL, INTENT(IN) :: r
-	   		REAL, INTENT(OUT) :: Area
-		END SUBROUTINE Compute_Area
-	END INTERFACE
-
 REAL :: radius, Area_Circle
+interface
+    subroutine  Compute_Area(r,area)
+        REAL, INTENT(IN) :: r
+        REAL, INTENT(OUT) :: Area
+
+    end subroutine
+end interface
 
 radius = 1
 
-CALL Compute_Area(radius, Area_Circle)
+CALL Compute_Area(radius, 2) !<<<<< 10,13,pass
 
 END PROGRAM Area
-
 
 SUBROUTINE Compute_Area(r, Area)
 

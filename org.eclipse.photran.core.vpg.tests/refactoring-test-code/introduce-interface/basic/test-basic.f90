@@ -1,5 +1,5 @@
 !taken from http://www.stanford.edu/class/me200c/tutorial_90/09_modules.html
-PROGRAM Area !<<<<< 14,1,24,28,pass
+PROGRAM Area
 
 IMPLICIT NONE
 
@@ -7,7 +7,7 @@ REAL :: radius, Area_Circle
 
 radius = 1
 
-CALL Compute_Area(radius, 2)
+CALL Compute_Area(radius, 2) !<<<<< 10,13,pass
 
 END PROGRAM Area
 

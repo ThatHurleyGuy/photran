@@ -34,7 +34,7 @@ import junit.framework.TestCase;
 public class DetectionTest extends TestCase
 { 
     //test files
-    String[] filenames = {"refactoring-test-code/create-interface/basic/test-basic.f90", 
+    String[] filenames = {"refactoring-test-code/introduce-interface/basic/test-basic.f90", 
                           "refactoring-test-code/typesafe-detection/intrinsics/test-intrinsic.f90",
                           "refactoring-test-code/typesafe-detection/multiple/test-multiple.f90"};      
     

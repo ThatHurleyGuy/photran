@@ -41,6 +41,10 @@ public class IntroduceInterfaceRefactoringTestSuite extends
     protected boolean shouldCompile(IFile fileContainingMarker)
     {
         String name = fileContainingMarker.getName();
-        return !name.equalsIgnoreCase("test-fail.f90");
+        if (name.equalsIgnoreCase("test-complex.f90"))
+           return false; 
+        if (name.equalsIgnoreCase("test-fail.f90"))
+            return false;
+        return true;
     }
 }

@@ -1,4 +1,4 @@
-PROGRAM Area !<<<<< 26,1,37,25,pass
+PROGRAM Area 
 !---------------------------------------------------------------------
 !
 !  This program computes the area of a circle given the input radius
@@ -14,7 +14,7 @@ REAL :: area_thing
 
 radius = 1
 
-area_thing = Area_Circle(radius)
+area_thing = Area_Circle(radius) !<<<<< 17,21, pass
 
 END PROGRAM Area
 
