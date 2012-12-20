@@ -124,15 +124,17 @@ public class IntroduceInterfaceRefactoring extends FortranEditorRefactoring
         }
 
         // we also need the declaration of all function parameters
-        for (ASTFunctionParNode param : function.getFunctionPars())
+        if (function.getFunctionPars() != null)
         {
-            for (Definition def : param.getVariableName().resolveBinding())
+            for (ASTFunctionParNode param : function.getFunctionPars())
             {
-                neededDeclarations.add(def.getCanonicalizedName());
-                parameters.add(def.getCanonicalizedName());
+                for (Definition def : param.getVariableName().resolveBinding())
+                {
+                    neededDeclarations.add(def.getCanonicalizedName());
+                    parameters.add(def.getCanonicalizedName());
+                }
             }
         }
-
         DeclarationVisitor visitor = new DeclarationVisitor(neededDeclarations);
         function.getParent().accept(visitor);
 
@@ -162,12 +164,15 @@ public class IntroduceInterfaceRefactoring extends FortranEditorRefactoring
         ArrayList<String> parameters = new ArrayList<String>();
 
         // we also need the declaration of all function parameters
-        for (ASTSubroutineParNode param : subroutine.getSubroutinePars())
+        if (subroutine.getSubroutinePars() != null)
         {
-            for (Definition def : param.getVariableName().resolveBinding())
+            for (ASTSubroutineParNode param : subroutine.getSubroutinePars())
             {
-                neededDeclarations.add(def.getCanonicalizedName());
-                parameters.add(def.getCanonicalizedName());
+                for (Definition def : param.getVariableName().resolveBinding())
+                {
+                    neededDeclarations.add(def.getCanonicalizedName());
+                    parameters.add(def.getCanonicalizedName());
+                }
             }
         }
 
